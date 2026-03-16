@@ -324,6 +324,13 @@ canvas { width: 100% !important; }
         <div class="pattern-desc">Today's range engulfs yesterday's range. Close direction determines bias — close near high = bullish, near low = bearish.</div>
         <div class="pattern-status" id="outside-status">Scanning...</div>
       </div>
+      <div class="pattern-card" id="pattern-volbreak">
+        <div class="pattern-name">Volatility Breakout <span class="pattern-winrate">Intraday trigger</span></div>
+        <div class="pattern-desc">Open + 0.25x yesterday's range = buy level. Open - 0.25x = sell level. Best after narrow range days (compression → expansion).</div>
+        <div class="pattern-rule">Buy = Open + (0.25 x Prev Range) | Sell = Open - (0.25 x Prev Range) | Target/Stop = 2x breakout spread</div>
+        <div class="pattern-status" id="volbreak-status">Scanning...</div>
+        <div class="pattern-entry" id="volbreak-entry"></div>
+      </div>
     </div>
 
     <h3 style="margin-top:16px;">Signal Log</h3>
@@ -608,6 +615,23 @@ function detectPatterns() {
   patterns.outside = d.high >= prev.high && d.low <= prev.low;
   patterns.outsideDir = closePos > 0.5 ? 'BULLISH' : 'BEARISH';
 
+  // Volatility Breakout (Williams' bread-and-butter)
+  // Buy = Open + (0.25 x Yesterday's Range), Sell = Open - (0.25 x Yesterday's Range)
+  // Best after narrow range days
+  const prevRange = prev.high - prev.low;
+  const multiplier = 0.25;
+  const vbBuyLevel = d.open + (multiplier * prevRange);
+  const vbSellLevel = d.open - (multiplier * prevRange);
+  const isNarrowRange = prevRange < avgRange * 0.8; // compression signal
+  patterns.volBreak = true; // always show levels
+  patterns.vbBuyLevel = +vbBuyLevel.toFixed(2);
+  patterns.vbSellLevel = +vbSellLevel.toFixed(2);
+  patterns.vbTriggeredLong = d.high >= vbBuyLevel;
+  patterns.vbTriggeredShort = d.low <= vbSellLevel;
+  patterns.vbNarrowRange = isNarrowRange;
+  patterns.vbTarget = +(2 * multiplier * prevRange).toFixed(2); // target = 2x breakout spread
+  patterns.vbStop = patterns.vbTarget; // stop = 2x breakout spread (1:1 R:R default)
+
   return patterns;
 }
 
@@ -869,6 +893,13 @@ function updateCards() {
 
   document.getElementById('outside-status').textContent = patterns.outside ? `DETECTED — ${patterns.outsideDir}` : 'Not detected';
   document.getElementById('outside-status').style.color = patterns.outside ? '#fbbf24' : '#4a5a7e';
+
+  // Volatility Breakout
+  const vbStatus = document.getElementById('volbreak-status');
+  if (patterns.vbTriggeredLong) { vbStatus.textContent = 'LONG TRIGGERED'; vbStatus.style.color = '#4ade80'; }
+  else if (patterns.vbTriggeredShort) { vbStatus.textContent = 'SHORT TRIGGERED'; vbStatus.style.color = '#ef4444'; }
+  else { vbStatus.textContent = patterns.vbNarrowRange ? 'NARROW RANGE — HIGH PROBABILITY' : 'Levels set'; vbStatus.style.color = patterns.vbNarrowRange ? '#818cf8' : '#4a5a7e'; }
+  document.getElementById('volbreak-entry').textContent = `Buy @ ${patterns.vbBuyLevel} | Sell @ ${patterns.vbSellLevel} | Target: ${patterns.vbTarget}pts`;
 
   // Signal log
   const logEl = document.getElementById('signal-log');
