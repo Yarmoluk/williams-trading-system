@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Williams Trading System — Live Indicator Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0e17; color: #e0e6ed; font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; }
+
+.header {
+  background: linear-gradient(135deg, #0d1321 0%, #1a1f3a 100%);
+  border-bottom: 1px solid #2a3a5c;
+  padding: 16px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header h1 { font-size: 18px; color: #00d4ff; letter-spacing: 1px; }
+.header h1 span { color: #ff6b35; }
+.header .subtitle { font-size: 11px; color: #6b7b9e; margin-top: 2px; }
+.header .right-info { text-align: right; }
+.header .status { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #4ade80; }
+.header .status .dot { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; animation: pulse 2s infinite; }
+.header .acct-info { font-size: 10px; color: #6b7b9e; margin-top: 4px; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* Methodology banner */
+.method-banner {
+  background: linear-gradient(90deg, #1a1f3a, #0d1321);
+  border-bottom: 1px solid #2a3a5c;
+  padding: 8px 24px;
+  display: flex; gap: 24px; align-items: center; font-size: 10px; color: #4a5a7e;
+  overflow-x: auto; white-space: nowrap;
+}
+.method-banner .step { display: flex; align-items: center; gap: 6px; }
+.method-banner .step-num { background: #1e2a4a; color: #00d4ff; width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; }
+.method-banner .step.active .step-num { background: #00d4ff; color: #0a0e17; }
+.method-banner .step.active { color: #e0e6ed; }
+.method-banner .arrow { color: #2a3a5c; }
+
+.dashboard { display: grid; grid-template-columns: 280px 1fr 320px; grid-template-rows: auto 1fr; height: calc(100vh - 94px); gap: 1px; background: #1a2035; }
+
+.sidebar { background: #0d1321; padding: 16px; overflow-y: auto; grid-row: span 2; }
+.sidebar h3 { font-size: 11px; text-transform: uppercase; color: #4a5a7e; letter-spacing: 2px; margin-bottom: 12px; }
+.indicator-card {
+  background: #111827; border: 1px solid #1e2a4a; border-radius: 8px;
+  padding: 12px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s;
+}
+.indicator-card:hover { border-color: #00d4ff; }
+.indicator-card.active { border-color: #00d4ff; background: #0d1a2f; }
+.indicator-card .name { font-size: 13px; font-weight: 600; color: #e0e6ed; display: flex; justify-content: space-between; align-items: center; }
+.indicator-card .hierarchy { font-size: 9px; background: #1e2a4a; color: #6b7b9e; padding: 1px 6px; border-radius: 3px; }
+.indicator-card .value { font-size: 22px; font-weight: 700; margin: 6px 0; }
+.indicator-card .signal { font-size: 11px; padding: 2px 8px; border-radius: 4px; display: inline-block; }
+.signal-buy { background: #064e3b; color: #34d399; }
+.signal-sell { background: #7f1d1d; color: #fca5a5; }
+.signal-neutral { background: #1e293b; color: #94a3b8; }
+.signal-failswing { background: #1e1b4b; color: #818cf8; }
+.indicator-card .desc { font-size: 10px; color: #4a5a7e; margin-top: 6px; line-height: 1.4; }
+.indicator-card .formula { font-size: 9px; color: #334155; margin-top: 4px; font-style: italic; }
+
+.chart-area { background: #0d1321; padding: 16px; position: relative; }
+.chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.chart-header h2 { font-size: 14px; color: #94a3b8; }
+.chart-header .price-display { font-size: 20px; font-weight: 700; color: #00d4ff; }
+.chart-header .price-change { font-size: 12px; margin-left: 8px; }
+.timeframe-btns { display: flex; gap: 4px; }
+.timeframe-btns button {
+  background: #1e293b; border: 1px solid #2a3a5c; color: #94a3b8;
+  padding: 4px 12px; border-radius: 4px; font-size: 11px; cursor: pointer;
+  font-family: inherit;
+}
+.timeframe-btns button.active { background: #00d4ff; color: #0a0e17; border-color: #00d4ff; }
+.chart-container { position: relative; height: calc(100% - 40px); }
+canvas { width: 100% !important; }
+
+.sub-charts { background: #0d1321; padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+.sub-chart-box { background: #111827; border: 1px solid #1e2a4a; border-radius: 8px; padding: 12px; flex: 1; min-height: 160px; }
+.sub-chart-box h4 { font-size: 11px; color: #4a5a7e; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+
+.signal-panel { background: #0d1321; padding: 16px; grid-row: span 2; overflow-y: auto; }
+.signal-panel h3 { font-size: 11px; text-transform: uppercase; color: #4a5a7e; letter-spacing: 2px; margin-bottom: 12px; }
+
+.confluence-meter { background: #111827; border: 1px solid #1e2a4a; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.confluence-meter h4 { font-size: 12px; color: #94a3b8; margin-bottom: 10px; }
+.meter-bar { height: 24px; background: #1e293b; border-radius: 12px; overflow: hidden; position: relative; }
+.meter-fill { height: 100%; border-radius: 12px; transition: width 0.5s; }
+.confluence-score { font-size: 36px; font-weight: 700; text-align: center; margin: 8px 0; }
+.confluence-verdict { text-align: center; font-size: 13px; font-weight: 600; margin-bottom: 8px; letter-spacing: 1px; }
+
+.hierarchy-box { background: #0f172a; border: 1px solid #1e2a4a; border-radius: 6px; padding: 10px; margin-top: 10px; }
+.hierarchy-box .h-title { font-size: 10px; color: #4a5a7e; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.hierarchy-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 11px; }
+.hierarchy-row .h-dot { width: 8px; height: 8px; border-radius: 50%; }
+.hierarchy-row .h-label { color: #6b7b9e; flex: 1; }
+.hierarchy-row .h-status { font-weight: 600; }
+
+.trade-setup {
+  background: #111827; border: 1px solid #1e2a4a; border-radius: 8px;
+  padding: 16px; margin-bottom: 12px;
+}
+.trade-setup h4 { font-size: 12px; color: #94a3b8; margin-bottom: 10px; }
+.setup-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #1e2a4a; font-size: 12px; }
+.setup-row:last-child { border-bottom: none; }
+.setup-label { color: #4a5a7e; }
+.setup-value { color: #e0e6ed; font-weight: 600; }
+
+.signal-log { margin-top: 16px; }
+.signal-entry {
+  background: #111827; border-left: 3px solid #4a5a7e;
+  padding: 10px 12px; margin-bottom: 8px; border-radius: 0 6px 6px 0;
+}
+.signal-entry.buy { border-left-color: #4ade80; }
+.signal-entry.sell { border-left-color: #ef4444; }
+.signal-entry.info { border-left-color: #818cf8; }
+.signal-entry .time { font-size: 10px; color: #4a5a7e; }
+.signal-entry .msg { font-size: 12px; margin-top: 4px; }
+.signal-entry .detail { font-size: 10px; color: #4a5a7e; margin-top: 2px; }
+
+.pattern-section { margin-top: 16px; }
+.pattern-card {
+  background: #111827; border: 1px solid #1e2a4a; border-radius: 8px;
+  padding: 12px; margin-bottom: 8px;
+}
+.pattern-card .pattern-name { font-size: 12px; font-weight: 600; color: #fbbf24; display: flex; justify-content: space-between; }
+.pattern-card .pattern-winrate { font-size: 10px; color: #6b7b9e; }
+.pattern-card .pattern-desc { font-size: 11px; color: #6b7b9e; margin-top: 4px; line-height: 1.4; }
+.pattern-card .pattern-rule { font-size: 10px; color: #334155; margin-top: 4px; font-style: italic; }
+.pattern-card .pattern-status { font-size: 11px; margin-top: 6px; }
+.pattern-card .pattern-entry { font-size: 10px; color: #818cf8; margin-top: 4px; }
+
+/* Holding period indicator */
+.holding-box { background: #111827; border: 1px solid #1e2a4a; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+.holding-box h4 { font-size: 11px; color: #4a5a7e; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.holding-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; }
+.holding-label { color: #6b7b9e; }
+.holding-val { color: #e0e6ed; font-weight: 600; }
+
+/* Williams quote */
+.quote-box { background: #0f172a; border-left: 2px solid #ff6b35; padding: 10px 12px; margin-bottom: 16px; border-radius: 0 6px 6px 0; }
+.quote-box .quote { font-size: 11px; color: #94a3b8; font-style: italic; line-height: 1.5; }
+.quote-box .author { font-size: 10px; color: #4a5a7e; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>WILLIAMS <span>TRADING SYSTEM</span></h1>
+    <div class="subtitle">Larry Williams Strategy Engine — Built for Chris</div>
+  </div>
+  <div class="right-info">
+    <div class="status"><span class="dot"></span> LIVE SIMULATION</div>
+    <div class="acct-info">Account: $100,000 | Risk: 2%/trade | Swing: 2-5 day holds</div>
+  </div>
+</div>
+
+<!-- Williams Hierarchy Banner -->
+<div class="method-banner">
+  <div class="step" id="step-1"><span class="step-num">1</span> COT Bias (Weekly)</div>
+  <span class="arrow">&rarr;</span>
+  <div class="step" id="step-2"><span class="step-num">2</span> Seasonal Confirm</div>
+  <span class="arrow">&rarr;</span>
+  <div class="step" id="step-3"><span class="step-num">3</span> Williams A/D Trend</div>
+  <span class="arrow">&rarr;</span>
+  <div class="step" id="step-4"><span class="step-num">4</span> %R or UO Trigger</div>
+  <span class="arrow">&rarr;</span>
+  <div class="step" id="step-5"><span class="step-num">5</span> Pattern Entry</div>
+  <span class="arrow">&rarr;</span>
+  <div class="step" id="step-6"><span class="step-num">6</span> Size &amp; Execute</div>
+</div>
+
+<div class="dashboard">
+  <!-- Left Sidebar: Indicators -->
+  <div class="sidebar">
+    <h3>Williams Indicator Stack</h3>
+
+    <div class="indicator-card active" id="card-cot">
+      <div class="name">COT Index <span class="hierarchy">L1 — BIAS</span></div>
+      <div class="value" id="cot-value" style="color:#fbbf24;">—</div>
+      <div class="signal signal-neutral" id="cot-signal">LOADING</div>
+      <div class="desc">Commercial net position normalized 0-100 (3yr lookback)<br>Buy > 75 + Large Spec < 25 | Sell < 25 + Large Spec > 75</div>
+      <div class="formula">COT = (Net - 3yr Low) / (3yr High - 3yr Low) x 100</div>
+    </div>
+
+    <div class="indicator-card" id="card-seasonal">
+      <div class="name">Seasonal Pattern <span class="hierarchy">L2 — CONFIRM</span></div>
+      <div class="value" id="seasonal-value" style="color:#34d399;">—</div>
+      <div class="signal signal-neutral" id="seasonal-signal">LOADING</div>
+      <div class="desc">15-30yr avg return for current calendar period<br>Requires 65%+ historical consistency to confirm</div>
+    </div>
+
+    <div class="indicator-card" id="card-wad">
+      <div class="name">Williams A/D <span class="hierarchy">L3 — TREND</span></div>
+      <div class="value" id="wad-value" style="color:#f472b6;">—</div>
+      <div class="signal signal-neutral" id="wad-signal">LOADING</div>
+      <div class="desc">Price-only accumulation/distribution (no volume)<br>Divergence from price = early reversal warning</div>
+      <div class="formula">Up day: Close - Min(Low, PrevClose) | Down day: Close - Max(High, PrevClose)</div>
+    </div>
+
+    <div class="indicator-card" id="card-wr">
+      <div class="name">Williams %R (14) <span class="hierarchy">L4 — TRIGGER</span></div>
+      <div class="value" id="wr-value" style="color:#00d4ff;">—</div>
+      <div class="signal signal-neutral" id="wr-signal">LOADING</div>
+      <div class="desc">Failure Swing method (NOT simple OB/OS)<br>Wait for exit from extreme, then failure to re-enter</div>
+      <div class="formula">%R = (HH - Close) / (HH - LL) x -100</div>
+    </div>
+
+    <div class="indicator-card" id="card-uo">
+      <div class="name">Ultimate Oscillator <span class="hierarchy">L4 — TRIGGER</span></div>
+      <div class="value" id="uo-value" style="color:#a78bfa;">—</div>
+      <div class="signal signal-neutral" id="uo-signal">LOADING</div>
+      <div class="desc">3-timeframe weighted oscillator (Williams, 1985)<br>Buy: divergence < 30 + breakout | Sell: divergence > 70 + breakdown</div>
+      <div class="formula">UO = 100 x (4xAvg7 + 2xAvg14 + 1xAvg28) / 7</div>
+    </div>
+
+    <div class="indicator-card" id="card-risk">
+      <div class="name">Position Sizing <span class="hierarchy">L6 — EXECUTE</span></div>
+      <div class="value" id="risk-value" style="color:#fb923c;">—</div>
+      <div class="signal signal-neutral" id="risk-signal">RISK MGT</div>
+      <div class="desc">Fixed fractional: max 2% risk per trade<br>Stop at prior swing point | ES = $50/point</div>
+      <div class="formula">Contracts = (Acct x 0.02) / (StopDist x $50/pt)</div>
+    </div>
+  </div>
+
+  <!-- Main Chart -->
+  <div class="chart-area">
+    <div class="chart-header">
+      <div>
+        <h2>S&P 500 E-mini Futures (ES) — Simulated</h2>
+        <span class="price-display" id="live-price">—</span>
+        <span class="price-change" id="price-change">—</span>
+      </div>
+      <div class="timeframe-btns">
+        <button class="active" onclick="setTimeframe('1D')">1D</button>
+        <button onclick="setTimeframe('1W')">1W</button>
+        <button onclick="setTimeframe('1M')">1M</button>
+      </div>
+    </div>
+    <div class="chart-container">
+      <canvas id="priceChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Signal Panel -->
+  <div class="signal-panel">
+    <div class="quote-box">
+      <div class="quote">"Wealth is not amassed with just good market calls. It also requires correct money management."</div>
+      <div class="author">— Larry Williams, Long-Term Secrets to Short-Term Trading</div>
+    </div>
+
+    <h3>Confluence Engine</h3>
+
+    <div class="confluence-meter">
+      <h4>Williams Hierarchy Score</h4>
+      <div class="confluence-verdict" id="confluence-verdict">SCANNING...</div>
+      <div class="confluence-score" id="confluence-score" style="color:#94a3b8;">—</div>
+      <div class="meter-bar">
+        <div class="meter-fill" id="confluence-fill" style="width:0%;background:#4a5a7e;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:#4a5a7e;margin-top:4px;">
+        <span>NO TRADE</span><span>WATCH</span><span>EXECUTE</span>
+      </div>
+
+      <!-- Hierarchy checklist -->
+      <div class="hierarchy-box">
+        <div class="h-title">Williams Decision Hierarchy</div>
+        <div class="hierarchy-row" id="h-cot"><span class="h-dot" style="background:#4a5a7e;"></span><span class="h-label">COT Directional Bias</span><span class="h-status" style="color:#4a5a7e;">—</span></div>
+        <div class="hierarchy-row" id="h-seasonal"><span class="h-dot" style="background:#4a5a7e;"></span><span class="h-label">Seasonal Alignment</span><span class="h-status" style="color:#4a5a7e;">—</span></div>
+        <div class="hierarchy-row" id="h-wad"><span class="h-dot" style="background:#4a5a7e;"></span><span class="h-label">A/D Trend Confirm</span><span class="h-status" style="color:#4a5a7e;">—</span></div>
+        <div class="hierarchy-row" id="h-trigger"><span class="h-dot" style="background:#4a5a7e;"></span><span class="h-label">%R or UO Trigger</span><span class="h-status" style="color:#4a5a7e;">—</span></div>
+        <div class="hierarchy-row" id="h-pattern"><span class="h-dot" style="background:#4a5a7e;"></span><span class="h-label">Pattern Entry Signal</span><span class="h-status" style="color:#4a5a7e;">—</span></div>
+      </div>
+    </div>
+
+    <div class="trade-setup">
+      <h4>Current Trade Setup</h4>
+      <div class="setup-row"><span class="setup-label">Direction</span><span class="setup-value" id="setup-direction">—</span></div>
+      <div class="setup-row"><span class="setup-label">Entry Zone</span><span class="setup-value" id="setup-entry">—</span></div>
+      <div class="setup-row"><span class="setup-label">Stop (Swing Pt)</span><span class="setup-value" id="setup-stop">—</span></div>
+      <div class="setup-row"><span class="setup-label">Target 1 (1.5R)</span><span class="setup-value" id="setup-t1">—</span></div>
+      <div class="setup-row"><span class="setup-label">Target 2 (3R)</span><span class="setup-value" id="setup-t2">—</span></div>
+      <div class="setup-row"><span class="setup-label">Risk:Reward</span><span class="setup-value" id="setup-rr">—</span></div>
+      <div class="setup-row"><span class="setup-label">Contracts</span><span class="setup-value" id="setup-size">—</span></div>
+      <div class="setup-row"><span class="setup-label">Max $ Loss</span><span class="setup-value" id="setup-maxloss">—</span></div>
+    </div>
+
+    <div class="holding-box">
+      <h4>Williams Trading Profile</h4>
+      <div class="holding-row"><span class="holding-label">Style</span><span class="holding-val">Short-term swing</span></div>
+      <div class="holding-row"><span class="holding-label">Holding Period</span><span class="holding-val">2-5 days</span></div>
+      <div class="holding-row"><span class="holding-label">Approach</span><span class="holding-val">Mean reversion + trend filter</span></div>
+      <div class="holding-row"><span class="holding-label">Exit Longs</span><span class="holding-val">UO > 70 or sell signal</span></div>
+      <div class="holding-row"><span class="holding-label">Exit Shorts</span><span class="holding-val">UO < 30 or buy signal</span></div>
+      <div class="holding-row"><span class="holding-label">1987 World Cup</span><span class="holding-val" style="color:#fbbf24;">$10K → $1.1M (11,376%)</span></div>
+    </div>
+
+    <h3>Pattern Detection</h3>
+    <div class="pattern-section">
+      <div class="pattern-card" id="pattern-oops">
+        <div class="pattern-name">OOPS! Pattern <span class="pattern-winrate">~86% win rate (bonds)</span></div>
+        <div class="pattern-desc">Gap open beyond prior range. Entry: buy stop at yesterday's low (gap down) or sell stop at yesterday's high (gap up).</div>
+        <div class="pattern-rule">Rule: open < prev low → buy stop @ prev low | open > prev high → sell stop @ prev high</div>
+        <div class="pattern-status" id="oops-status">Scanning...</div>
+        <div class="pattern-entry" id="oops-entry"></div>
+      </div>
+      <div class="pattern-card" id="pattern-smash">
+        <div class="pattern-name">Smash Day <span class="pattern-winrate">Reversal pattern</span></div>
+        <div class="pattern-desc">Close below prev low (buy setup) or above prev high (sell setup). Range > 1.5x avg. Entry: buy stop 1 tick above smash day high.</div>
+        <div class="pattern-rule">Buy: close &lt; prev low, buy stop above today's high | Sell: close &gt; prev high, sell stop below today's low</div>
+        <div class="pattern-status" id="smash-status">Scanning...</div>
+        <div class="pattern-entry" id="smash-entry"></div>
+      </div>
+      <div class="pattern-card" id="pattern-inside">
+        <div class="pattern-name">Inside Day <span class="pattern-winrate">Continuation</span></div>
+        <div class="pattern-desc">Today's range contained within yesterday's range. Signals compression before expansion. Trade the breakout direction.</div>
+        <div class="pattern-rule">High &lt; prev high AND low &gt; prev low → breakout entry above/below inside day range</div>
+        <div class="pattern-status" id="inside-status">Scanning...</div>
+        <div class="pattern-entry" id="inside-entry"></div>
+      </div>
+      <div class="pattern-card" id="pattern-outside">
+        <div class="pattern-name">Outside Day <span class="pattern-winrate">Reversal</span></div>
+        <div class="pattern-desc">Today's range engulfs yesterday's range. Close direction determines bias — close near high = bullish, near low = bearish.</div>
+        <div class="pattern-status" id="outside-status">Scanning...</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:16px;">Signal Log</h3>
+    <div class="signal-log" id="signal-log"></div>
+  </div>
+
+  <!-- Sub-indicator charts -->
+  <div class="sub-charts">
+    <div class="sub-chart-box">
+      <h4>Williams %R (14) — Failure Swing Detection</h4>
+      <canvas id="wrChart"></canvas>
+    </div>
+    <div class="sub-chart-box">
+      <h4>Ultimate Oscillator (7/14/28) — Divergence Scanner</h4>
+      <canvas id="uoChart"></canvas>
+    </div>
+    <div class="sub-chart-box">
+      <h4>Williams A/D — Accumulation vs Distribution</h4>
+      <canvas id="wadChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== DATA GENERATION ==========
+function generatePriceData(bars = 120) {
+  const data = [];
+  let price = 5200 + Math.random() * 200;
+  const now = Date.now();
+  for (let i = 0; i < bars; i++) {
+    const volatility = 15 + Math.random() * 25;
+    const trend = Math.sin(i / 20) * 8 + (Math.random() - 0.48) * 12;
+    const open = price;
+    const close = open + trend + (Math.random() - 0.5) * volatility;
+    const high = Math.max(open, close) + Math.random() * volatility * 0.6;
+    const low = Math.min(open, close) - Math.random() * volatility * 0.6;
+    data.push({
+      time: new Date(now - (bars - i) * 86400000),
+      open: +open.toFixed(2), high: +high.toFixed(2),
+      low: +low.toFixed(2), close: +close.toFixed(2),
+      volume: Math.floor(800000 + Math.random() * 600000)
+    });
+    price = close;
+  }
+  return data;
+}
+
+const priceData = generatePriceData(120);
+const labels = priceData.map(d => d.time.toLocaleDateString('en-US', { month:'short', day:'numeric' }));
+const closes = priceData.map(d => d.close);
+const highs = priceData.map(d => d.high);
+const lows = priceData.map(d => d.low);
+
+// ========== INDICATOR CALCULATIONS ==========
+
+// Williams %R with Failure Swing detection
+function calcWilliamsR(period = 14) {
+  const wr = [];
+  for (let i = 0; i < priceData.length; i++) {
+    if (i < period - 1) { wr.push(null); continue; }
+    let hh = -Infinity, ll = Infinity;
+    for (let j = i - period + 1; j <= i; j++) {
+      hh = Math.max(hh, priceData[j].high);
+      ll = Math.min(ll, priceData[j].low);
+    }
+    const r = hh === ll ? -50 : ((hh - priceData[i].close) / (hh - ll)) * -100;
+    wr.push(+r.toFixed(2));
+  }
+  return wr;
+}
+
+// Failure Swing detection on %R
+// Buy: %R drops below -80, rises above -80, pulls back but stays above -80, continues higher
+// Sell: %R rises above -20, drops below -20, rallies but stays below -20, continues lower
+function detectFailureSwing(wrData) {
+  const result = { type: null, active: false, description: '' };
+  const len = wrData.length;
+  if (len < 20) return result;
+
+  // Check last 15 bars for failure swing pattern
+  const recent = wrData.slice(-15).filter(v => v !== null);
+  if (recent.length < 10) return result;
+
+  // Bullish failure swing: was oversold, exited, pulled back but stayed above -80
+  let wasOversold = false, exitedOversold = false, pullbackAbove = false;
+  for (let i = 0; i < recent.length - 2; i++) {
+    if (recent[i] < -80) wasOversold = true;
+    if (wasOversold && recent[i] > -80) exitedOversold = true;
+    if (exitedOversold && recent[i] < recent[i-1] && recent[i] > -80) pullbackAbove = true;
+    if (pullbackAbove && recent[i+1] > recent[i]) {
+      result.type = 'buy';
+      result.active = true;
+      result.description = 'Bullish failure swing: exited oversold, pullback held above -80';
+      return result;
+    }
+  }
+
+  // Bearish failure swing: was overbought, exited, rallied but stayed below -20
+  wasOversold = false; exitedOversold = false; pullbackAbove = false;
+  for (let i = 0; i < recent.length - 2; i++) {
+    if (recent[i] > -20) wasOversold = true;
+    if (wasOversold && recent[i] < -20) exitedOversold = true;
+    if (exitedOversold && recent[i] > recent[i-1] && recent[i] < -20) pullbackAbove = true;
+    if (pullbackAbove && recent[i+1] < recent[i]) {
+      result.type = 'sell';
+      result.active = true;
+      result.description = 'Bearish failure swing: exited overbought, rally failed below -20';
+      return result;
+    }
+  }
+
+  return result;
+}
+
+// Ultimate Oscillator with proper divergence detection
+function calcUltimateOscillator() {
+  const bp = [], tr = [];
+  for (let i = 0; i < priceData.length; i++) {
+    const d = priceData[i];
+    const prevClose = i > 0 ? priceData[i-1].close : d.close;
+    bp.push(d.close - Math.min(d.low, prevClose));
+    tr.push(Math.max(d.high, prevClose) - Math.min(d.low, prevClose));
+  }
+  const uo = [];
+  for (let i = 0; i < priceData.length; i++) {
+    if (i < 27) { uo.push(null); continue; }
+    let bp7=0,tr7=0,bp14=0,tr14=0,bp28=0,tr28=0;
+    for (let j = i-6; j <= i; j++) { bp7 += bp[j]; tr7 += tr[j]; }
+    for (let j = i-13; j <= i; j++) { bp14 += bp[j]; tr14 += tr[j]; }
+    for (let j = i-27; j <= i; j++) { bp28 += bp[j]; tr28 += tr[j]; }
+    const avg7 = tr7 ? bp7/tr7 : 0;
+    const avg14 = tr14 ? bp14/tr14 : 0;
+    const avg28 = tr28 ? bp28/tr28 : 0;
+    const val = 100 * ((4*avg7 + 2*avg14 + avg28) / 7);
+    uo.push(+val.toFixed(2));
+  }
+  return uo;
+}
+
+// UO Divergence detection
+// Buy: price lower low + UO higher low (UO < 30) + UO breaks above interim high
+// Sell: price higher high + UO lower high (UO > 70) + UO breaks below interim low
+function detectUODivergence(uoData) {
+  const result = { type: null, active: false, description: '' };
+  const len = priceData.length;
+  if (len < 30) return result;
+
+  // Look for bullish divergence in last 20 bars
+  for (let i = len - 20; i < len - 3; i++) {
+    if (uoData[i] === null) continue;
+    for (let j = i + 3; j < len; j++) {
+      if (uoData[j] === null) continue;
+      // Price lower low, UO higher low, UO was below 30
+      if (priceData[j].low < priceData[i].low && uoData[j] > uoData[i] && uoData[i] < 30) {
+        // Check if UO broke above the high between the two lows
+        let interimHigh = -Infinity;
+        for (let k = i; k <= j; k++) { if (uoData[k] !== null) interimHigh = Math.max(interimHigh, uoData[k]); }
+        if (uoData[len-1] > interimHigh * 0.95) {
+          result.type = 'buy';
+          result.active = true;
+          result.description = 'Bullish UO divergence: price lower low + UO higher low below 30';
+          return result;
+        }
+      }
+      // Price higher high, UO lower high, UO was above 70
+      if (priceData[j].high > priceData[i].high && uoData[j] < uoData[i] && uoData[i] > 70) {
+        let interimLow = Infinity;
+        for (let k = i; k <= j; k++) { if (uoData[k] !== null) interimLow = Math.min(interimLow, uoData[k]); }
+        if (uoData[len-1] < interimLow * 1.05) {
+          result.type = 'sell';
+          result.active = true;
+          result.description = 'Bearish UO divergence: price higher high + UO lower high above 70';
+          return result;
+        }
+      }
+    }
+  }
+  return result;
+}
+
+// Williams Accumulation/Distribution (price-only, no volume)
+function calcWilliamsAD() {
+  const wad = [];
+  let cum = 0;
+  for (let i = 0; i < priceData.length; i++) {
+    if (i === 0) { wad.push(0); continue; }
+    const d = priceData[i], prev = priceData[i-1];
+    const trh = Math.max(d.high, prev.close); // True Range High
+    const trl = Math.min(d.low, prev.close);   // True Range Low
+    let ad = 0;
+    if (d.close > prev.close) {
+      ad = d.close - trl;
+    } else if (d.close < prev.close) {
+      ad = d.close - trh;
+    }
+    cum += ad;
+    wad.push(+cum.toFixed(2));
+  }
+  return wad;
+}
+
+// WAD divergence detection
+function detectWADDivergence(wadData) {
+  const len = priceData.length;
+  if (len < 20) return { type: null, description: '' };
+  const last10Close = priceData.slice(-10);
+  const last10WAD = wadData.slice(-10);
+  // Simple: price trending down but WAD trending up = bullish divergence
+  const priceSlope = last10Close[9].close - last10Close[0].close;
+  const wadSlope = last10WAD[9] - last10WAD[0];
+  if (priceSlope < -20 && wadSlope > 20) return { type: 'buy', description: 'Bullish WAD divergence: price falling but accumulation rising' };
+  if (priceSlope > 20 && wadSlope < -20) return { type: 'sell', description: 'Bearish WAD divergence: price rising but distribution occurring' };
+  return { type: null, description: '' };
+}
+
+// COT Index (simulated — 3yr normalized)
+function calcCOTData() {
+  const commercial = [], largSpec = [], smallSpec = [];
+  let cVal = 50, lVal = 50, sVal = 50;
+  for (let i = 0; i < priceData.length; i++) {
+    cVal += (Math.random() - 0.48) * 8;
+    lVal += (Math.random() - 0.52) * 8; // Large specs slightly contrarian to commercials
+    sVal += (Math.random() - 0.5) * 6;
+    cVal = Math.max(0, Math.min(100, cVal));
+    lVal = Math.max(0, Math.min(100, lVal));
+    sVal = Math.max(0, Math.min(100, sVal));
+    commercial.push(+cVal.toFixed(1));
+    largSpec.push(+lVal.toFixed(1));
+    smallSpec.push(+sVal.toFixed(1));
+  }
+  return { commercial, largSpec, smallSpec };
+}
+
+// Seasonal tendency (simulated S&P 500 historical)
+function calcSeasonal() {
+  return priceData.map(d => {
+    const month = d.time.getMonth();
+    // S&P 500 seasonal win rates by month (historical averages)
+    const seasonal = [62, 53, 58, 72, 48, 42, 57, 38, 33, 67, 77, 82];
+    return seasonal[month];
+  });
+}
+
+// Pattern detection — hardened with real Williams rules
+function detectPatterns() {
+  const last = priceData.length - 1;
+  const d = priceData[last], prev = priceData[last-1];
+  const patterns = {};
+
+  // OOPS! Pattern (Williams' exact rules)
+  // Long: today's open < yesterday's low → place buy stop AT yesterday's low
+  // Short: today's open > yesterday's high → place sell stop AT yesterday's high
+  const oopsGapDown = d.open < prev.low;
+  const oopsGapUp = d.open > prev.high;
+  patterns.oops = oopsGapDown || oopsGapUp;
+  patterns.oopsDir = oopsGapDown ? 'BULLISH' : (oopsGapUp ? 'BEARISH' : 'NONE');
+  patterns.oopsEntry = oopsGapDown ? prev.low : (oopsGapUp ? prev.high : null);
+  patterns.oopsTriggered = oopsGapDown ? (d.close >= prev.low) : (oopsGapUp ? (d.close <= prev.high) : false);
+
+  // Smash Day (Williams' exact rules)
+  // Buy setup: close below previous day's low → buy stop 1 tick above smash day's high
+  // Sell setup: close above previous day's high → sell stop 1 tick below smash day's low
+  const range = d.high - d.low;
+  const avgRange = priceData.slice(-20).reduce((s,b) => s + b.high - b.low, 0) / 20;
+  const smashBuy = d.close < prev.low && range > avgRange * 1.2;
+  const smashSell = d.close > prev.high && range > avgRange * 1.2;
+  patterns.smash = smashBuy || smashSell;
+  patterns.smashDir = smashBuy ? 'BULLISH' : (smashSell ? 'BEARISH' : 'NONE');
+  patterns.smashEntry = smashBuy ? d.high + 0.25 : (smashSell ? d.low - 0.25 : null);
+
+  // Hidden Smash Day: close in upper/lower 25% of range with wide bar
+  const closePos = (d.close - d.low) / (range || 1);
+  patterns.hiddenSmash = range > avgRange * 1.5 && (closePos < 0.25 || closePos > 0.75);
+  patterns.hiddenSmashDir = closePos > 0.75 ? 'BULLISH' : (closePos < 0.25 ? 'BEARISH' : 'NONE');
+
+  // Inside Day: today's range contained within yesterday's range
+  patterns.inside = d.high <= prev.high && d.low >= prev.low;
+  patterns.insideBreakUp = prev.high; // buy stop level
+  patterns.insideBreakDown = prev.low; // sell stop level
+
+  // Outside Day: today's range engulfs yesterday's range
+  patterns.outside = d.high >= prev.high && d.low <= prev.low;
+  patterns.outsideDir = closePos > 0.5 ? 'BULLISH' : 'BEARISH';
+
+  return patterns;
+}
+
+// ========== COMPUTE ALL ==========
+const wrData = calcWilliamsR(14);
+const uoData = calcUltimateOscillator();
+const wadData = calcWilliamsAD();
+const cotData = calcCOTData();
+const seasonalData = calcSeasonal();
+let patterns = detectPatterns();
+let failureSwing = detectFailureSwing(wrData);
+let uoDivergence = detectUODivergence(uoData);
+let wadDivergence = detectWADDivergence(wadData);
+
+// ========== CONFLUENCE ENGINE (Williams Hierarchy) ==========
+function calcConfluence() {
+  const last = priceData.length - 1;
+  const wr = wrData[last];
+  const uo = uoData[last];
+  const cot = cotData.commercial[last];
+  const largSpec = cotData.largSpec[last];
+  const seasonal = seasonalData[last];
+  let score = 0;
+  let signals = [];
+  let direction = 'NEUTRAL';
+  let bullCount = 0, bearCount = 0;
+  let hierarchy = { cot: null, seasonal: null, wad: null, trigger: null, pattern: null };
+
+  // LAYER 1: COT Bias (25 points — highest weight)
+  // Buy: commercial > 75 AND large spec < 25
+  // Sell: commercial < 25 AND large spec > 75
+  if (cot > 75) {
+    score += 25; bullCount++;
+    hierarchy.cot = 'LONG';
+    signals.push({ type: 'buy', msg: `COT: Commercials at ${cot.toFixed(0)}% (bullish)`, detail: `Large Specs at ${largSpec.toFixed(0)}% — smart money accumulating` });
+    if (largSpec < 25) { score += 5; signals.push({ type: 'buy', msg: `COT Confluence: Large Specs at ${largSpec.toFixed(0)}% (contrarian bullish)` }); }
+  } else if (cot < 25) {
+    score += 25; bearCount++;
+    hierarchy.cot = 'SHORT';
+    signals.push({ type: 'sell', msg: `COT: Commercials at ${cot.toFixed(0)}% (bearish)`, detail: `Large Specs at ${largSpec.toFixed(0)}% — smart money distributing` });
+    if (largSpec > 75) { score += 5; signals.push({ type: 'sell', msg: `COT Confluence: Large Specs at ${largSpec.toFixed(0)}% (contrarian bearish)` }); }
+  }
+
+  // LAYER 2: Seasonal (20 points)
+  if (seasonal >= 65) {
+    score += 20; bullCount++;
+    hierarchy.seasonal = 'BULLISH';
+    signals.push({ type: 'buy', msg: `Seasonal: ${seasonal}% bullish tendency for this month`, detail: 'Requires 65%+ historical consistency — met' });
+  } else if (seasonal <= 35) {
+    score += 20; bearCount++;
+    hierarchy.seasonal = 'BEARISH';
+    signals.push({ type: 'sell', msg: `Seasonal: ${seasonal}% — historically weak period`, detail: 'Below 35% threshold — bearish seasonal' });
+  } else {
+    hierarchy.seasonal = 'MIXED';
+    signals.push({ type: 'info', msg: `Seasonal: ${seasonal}% — no strong historical bias` });
+  }
+
+  // LAYER 3: Williams A/D (15 points)
+  const wadSlope = wadData[last] - wadData[last - 5];
+  if (wadSlope > 30) {
+    score += 15; bullCount++;
+    hierarchy.wad = 'ACCUMULATION';
+    signals.push({ type: 'buy', msg: 'Williams A/D trending up — accumulation phase' });
+  } else if (wadSlope < -30) {
+    score += 15; bearCount++;
+    hierarchy.wad = 'DISTRIBUTION';
+    signals.push({ type: 'sell', msg: 'Williams A/D trending down — distribution phase' });
+  } else {
+    hierarchy.wad = 'FLAT';
+  }
+  // WAD divergence bonus
+  if (wadDivergence.type === 'buy') { score += 5; bullCount++; signals.push({ type: 'buy', msg: wadDivergence.description }); }
+  if (wadDivergence.type === 'sell') { score += 5; bearCount++; signals.push({ type: 'sell', msg: wadDivergence.description }); }
+
+  // LAYER 4: %R Failure Swing or UO Divergence (20 points — entry trigger)
+  if (failureSwing.active) {
+    score += 20;
+    if (failureSwing.type === 'buy') bullCount++;
+    else bearCount++;
+    hierarchy.trigger = failureSwing.type === 'buy' ? 'BUY TRIGGER' : 'SELL TRIGGER';
+    signals.push({ type: failureSwing.type, msg: `%R ${failureSwing.description}`, detail: 'Williams failure swing method — confirmed entry trigger' });
+  } else if (uoDivergence.active) {
+    score += 20;
+    if (uoDivergence.type === 'buy') bullCount++;
+    else bearCount++;
+    hierarchy.trigger = uoDivergence.type === 'buy' ? 'BUY TRIGGER' : 'SELL TRIGGER';
+    signals.push({ type: uoDivergence.type, msg: `UO ${uoDivergence.description}`, detail: 'Williams UO divergence method — confirmed entry trigger' });
+  } else {
+    // Simple OB/OS as secondary trigger (less weight)
+    if (wr !== null && wr < -80) {
+      score += 10; bullCount++;
+      hierarchy.trigger = 'OVERSOLD';
+      signals.push({ type: 'buy', msg: `%R at ${wr.toFixed(1)} — oversold zone, watching for failure swing` });
+    } else if (wr !== null && wr > -20) {
+      score += 10; bearCount++;
+      hierarchy.trigger = 'OVERBOUGHT';
+      signals.push({ type: 'sell', msg: `%R at ${wr.toFixed(1)} — overbought zone, watching for failure swing` });
+    }
+  }
+
+  // LAYER 5: Pattern (15 points)
+  if (patterns.oops && patterns.oopsTriggered) {
+    score += 15;
+    hierarchy.pattern = 'OOPS!';
+    signals.push({ type: patterns.oopsDir === 'BULLISH' ? 'buy' : 'sell', msg: `OOPS! pattern TRIGGERED — ${patterns.oopsDir}`, detail: `Entry at ${patterns.oopsEntry?.toFixed(2)}` });
+  } else if (patterns.smash) {
+    score += 12;
+    hierarchy.pattern = 'SMASH DAY';
+    signals.push({ type: patterns.smashDir === 'BULLISH' ? 'buy' : 'sell', msg: `Smash Day — ${patterns.smashDir} setup`, detail: `Pending entry at ${patterns.smashEntry?.toFixed(2)}` });
+  } else if (patterns.inside) {
+    score += 8;
+    hierarchy.pattern = 'INSIDE DAY';
+    signals.push({ type: 'info', msg: 'Inside Day — compression, watch for breakout', detail: `Buy above ${patterns.insideBreakUp?.toFixed(2)} | Sell below ${patterns.insideBreakDown?.toFixed(2)}` });
+  } else if (patterns.outside) {
+    score += 10;
+    hierarchy.pattern = 'OUTSIDE DAY';
+    signals.push({ type: patterns.outsideDir === 'BULLISH' ? 'buy' : 'sell', msg: `Outside Day — ${patterns.outsideDir} engulfing` });
+  }
+
+  direction = bullCount > bearCount ? 'LONG' : bearCount > bullCount ? 'SHORT' : 'NEUTRAL';
+  score = Math.min(score, 100);
+
+  return { score, direction, signals, hierarchy };
+}
+
+let confluence = calcConfluence();
+
+// ========== UPDATE UI ==========
+function updateCards() {
+  const last = priceData.length - 1;
+  const wr = wrData[last];
+  const uo = uoData[last];
+  const wad = wadData[last];
+  const cot = cotData.commercial[last];
+  const largSpec = cotData.largSpec[last];
+  const seasonal = seasonalData[last];
+
+  // Live price
+  const lastPrice = priceData[last].close;
+  const prevPrice = priceData[last-1].close;
+  const pctChange = ((lastPrice - prevPrice) / prevPrice * 100);
+  document.getElementById('live-price').textContent = lastPrice.toFixed(2);
+  const changeEl = document.getElementById('price-change');
+  changeEl.textContent = `${pctChange >= 0 ? '+' : ''}${pctChange.toFixed(2)}%`;
+  changeEl.style.color = pctChange >= 0 ? '#4ade80' : '#ef4444';
+
+  // COT card
+  document.getElementById('cot-value').textContent = cot.toFixed(0) + '%';
+  const cotSig = document.getElementById('cot-signal');
+  if (cot > 75) { cotSig.textContent = 'BULLISH — SMART MONEY LONG'; cotSig.className = 'signal signal-buy'; }
+  else if (cot < 25) { cotSig.textContent = 'BEARISH — SMART MONEY SHORT'; cotSig.className = 'signal signal-sell'; }
+  else { cotSig.textContent = `NEUTRAL (L.Spec: ${largSpec.toFixed(0)}%)`; cotSig.className = 'signal signal-neutral'; }
+
+  // Seasonal
+  document.getElementById('seasonal-value').textContent = seasonal + '%';
+  const seaSig = document.getElementById('seasonal-signal');
+  if (seasonal >= 65) { seaSig.textContent = 'FAVORABLE (65%+ CONSISTENCY)'; seaSig.className = 'signal signal-buy'; }
+  else if (seasonal <= 35) { seaSig.textContent = 'UNFAVORABLE'; seaSig.className = 'signal signal-sell'; }
+  else { seaSig.textContent = 'MIXED — NO EDGE'; seaSig.className = 'signal signal-neutral'; }
+
+  // WAD
+  document.getElementById('wad-value').textContent = wad.toFixed(0);
+  const wadSlope = wad - wadData[last - 5];
+  const wadSig = document.getElementById('wad-signal');
+  if (wadDivergence.type) {
+    wadSig.textContent = wadDivergence.type === 'buy' ? 'BULLISH DIVERGENCE' : 'BEARISH DIVERGENCE';
+    wadSig.className = wadDivergence.type === 'buy' ? 'signal signal-buy' : 'signal signal-sell';
+  } else if (wadSlope > 30) { wadSig.textContent = 'ACCUMULATION'; wadSig.className = 'signal signal-buy'; }
+  else if (wadSlope < -30) { wadSig.textContent = 'DISTRIBUTION'; wadSig.className = 'signal signal-sell'; }
+  else { wadSig.textContent = 'FLAT'; wadSig.className = 'signal signal-neutral'; }
+
+  // Williams %R with failure swing
+  document.getElementById('wr-value').textContent = wr !== null ? wr.toFixed(1) : '—';
+  const wrSig = document.getElementById('wr-signal');
+  if (failureSwing.active) {
+    wrSig.textContent = failureSwing.type === 'buy' ? 'FAILURE SWING — BUY' : 'FAILURE SWING — SELL';
+    wrSig.className = 'signal signal-failswing';
+  } else if (wr < -80) { wrSig.textContent = 'OVERSOLD — WATCHING'; wrSig.className = 'signal signal-buy'; }
+  else if (wr > -20) { wrSig.textContent = 'OVERBOUGHT — WATCHING'; wrSig.className = 'signal signal-sell'; }
+  else { wrSig.textContent = 'NEUTRAL'; wrSig.className = 'signal signal-neutral'; }
+
+  // UO with divergence
+  document.getElementById('uo-value').textContent = uo !== null ? uo.toFixed(1) : '—';
+  const uoSig = document.getElementById('uo-signal');
+  if (uoDivergence.active) {
+    uoSig.textContent = uoDivergence.type === 'buy' ? 'DIVERGENCE — BUY' : 'DIVERGENCE — SELL';
+    uoSig.className = 'signal signal-failswing';
+  } else if (uo < 30) { uoSig.textContent = 'WATCH FOR DIVERGENCE'; uoSig.className = 'signal signal-buy'; }
+  else if (uo > 70) { uoSig.textContent = 'WATCH FOR DIVERGENCE'; uoSig.className = 'signal signal-sell'; }
+  else { uoSig.textContent = 'NEUTRAL'; uoSig.className = 'signal signal-neutral'; }
+
+  // Position sizing
+  const stopDist = findSwingStop(last);
+  const contracts = Math.max(1, Math.floor((100000 * 0.02) / (stopDist * 50)));
+  document.getElementById('risk-value').textContent = contracts + ' ct';
+  document.getElementById('risk-signal').textContent = `STOP: ${stopDist.toFixed(1)}pts`;
+  document.getElementById('risk-signal').className = 'signal signal-neutral';
+
+  // Confluence
+  confluence = calcConfluence();
+  const { score, direction, signals, hierarchy } = confluence;
+
+  // Verdict
+  const verdictEl = document.getElementById('confluence-verdict');
+  if (score >= 70) { verdictEl.textContent = 'EXECUTE TRADE'; verdictEl.style.color = '#4ade80'; }
+  else if (score >= 45) { verdictEl.textContent = 'WATCH — BUILDING'; verdictEl.style.color = '#fbbf24'; }
+  else { verdictEl.textContent = 'NO TRADE — WAIT'; verdictEl.style.color = '#6b7b9e'; }
+
+  document.getElementById('confluence-score').textContent = score + '/100';
+  const fill = document.getElementById('confluence-fill');
+  fill.style.width = score + '%';
+  if (score >= 70) { fill.style.background = 'linear-gradient(90deg,#059669,#34d399)'; document.getElementById('confluence-score').style.color = '#34d399'; }
+  else if (score >= 45) { fill.style.background = 'linear-gradient(90deg,#d97706,#fbbf24)'; document.getElementById('confluence-score').style.color = '#fbbf24'; }
+  else { fill.style.background = '#4a5a7e'; document.getElementById('confluence-score').style.color = '#94a3b8'; }
+
+  // Hierarchy checklist
+  updateHierarchyRow('h-cot', hierarchy.cot);
+  updateHierarchyRow('h-seasonal', hierarchy.seasonal);
+  updateHierarchyRow('h-wad', hierarchy.wad);
+  updateHierarchyRow('h-trigger', hierarchy.trigger);
+  updateHierarchyRow('h-pattern', hierarchy.pattern);
+
+  // Highlight active steps in banner
+  document.getElementById('step-1').className = hierarchy.cot ? 'step active' : 'step';
+  document.getElementById('step-2').className = hierarchy.seasonal && hierarchy.seasonal !== 'MIXED' ? 'step active' : 'step';
+  document.getElementById('step-3').className = hierarchy.wad && hierarchy.wad !== 'FLAT' ? 'step active' : 'step';
+  document.getElementById('step-4').className = hierarchy.trigger ? 'step active' : 'step';
+  document.getElementById('step-5').className = hierarchy.pattern ? 'step active' : 'step';
+  document.getElementById('step-6').className = score >= 70 ? 'step active' : 'step';
+
+  // Trade setup
+  document.getElementById('setup-direction').textContent = direction;
+  document.getElementById('setup-direction').style.color = direction === 'LONG' ? '#34d399' : direction === 'SHORT' ? '#ef4444' : '#94a3b8';
+  document.getElementById('setup-entry').textContent = lastPrice.toFixed(2);
+  const stop = direction === 'LONG' ? lastPrice - stopDist : lastPrice + stopDist;
+  document.getElementById('setup-stop').textContent = stop.toFixed(2);
+  document.getElementById('setup-stop').style.color = '#ef4444';
+  const t1 = direction === 'LONG' ? lastPrice + stopDist * 1.5 : lastPrice - stopDist * 1.5;
+  const t2 = direction === 'LONG' ? lastPrice + stopDist * 3 : lastPrice - stopDist * 3;
+  document.getElementById('setup-t1').textContent = t1.toFixed(2);
+  document.getElementById('setup-t2').textContent = t2.toFixed(2);
+  document.getElementById('setup-rr').textContent = '1:1.5 / 1:3';
+  document.getElementById('setup-size').textContent = contracts + ' contracts';
+  document.getElementById('setup-maxloss').textContent = '$' + (contracts * stopDist * 50).toFixed(0);
+  document.getElementById('setup-maxloss').style.color = '#ef4444';
+
+  // Patterns
+  document.getElementById('oops-status').textContent = patterns.oops ? (patterns.oopsTriggered ? `TRIGGERED — ${patterns.oopsDir}` : `SETUP — ${patterns.oopsDir}`) : 'Not detected';
+  document.getElementById('oops-status').style.color = patterns.oops ? (patterns.oopsTriggered ? '#4ade80' : '#fbbf24') : '#4a5a7e';
+  document.getElementById('oops-entry').textContent = patterns.oopsEntry ? `Entry: ${patterns.oopsDir === 'BULLISH' ? 'Buy' : 'Sell'} stop @ ${patterns.oopsEntry.toFixed(2)}` : '';
+
+  document.getElementById('smash-status').textContent = patterns.smash ? `DETECTED — ${patterns.smashDir}` : (patterns.hiddenSmash ? `HIDDEN SMASH — ${patterns.hiddenSmashDir}` : 'Not detected');
+  document.getElementById('smash-status').style.color = patterns.smash ? '#fbbf24' : (patterns.hiddenSmash ? '#818cf8' : '#4a5a7e');
+  document.getElementById('smash-entry').textContent = patterns.smashEntry ? `Pending: ${patterns.smashDir === 'BULLISH' ? 'Buy' : 'Sell'} stop @ ${patterns.smashEntry.toFixed(2)}` : '';
+
+  document.getElementById('inside-status').textContent = patterns.inside ? 'DETECTED — watch for breakout' : 'Not detected';
+  document.getElementById('inside-status').style.color = patterns.inside ? '#fbbf24' : '#4a5a7e';
+  document.getElementById('inside-entry').textContent = patterns.inside ? `Buy above ${patterns.insideBreakUp.toFixed(2)} | Sell below ${patterns.insideBreakDown.toFixed(2)}` : '';
+
+  document.getElementById('outside-status').textContent = patterns.outside ? `DETECTED — ${patterns.outsideDir}` : 'Not detected';
+  document.getElementById('outside-status').style.color = patterns.outside ? '#fbbf24' : '#4a5a7e';
+
+  // Signal log
+  const logEl = document.getElementById('signal-log');
+  logEl.innerHTML = '';
+  signals.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'signal-entry ' + (s.type || '');
+    div.innerHTML = `<div class="time">${new Date().toLocaleTimeString()}</div><div class="msg">${s.msg}</div>${s.detail ? '<div class="detail">' + s.detail + '</div>' : ''}`;
+    logEl.appendChild(div);
+  });
+  if (signals.length === 0) {
+    logEl.innerHTML = '<div class="signal-entry"><div class="msg" style="color:#4a5a7e;">No active signals — waiting for hierarchy alignment</div></div>';
+  }
+}
+
+function updateHierarchyRow(id, status) {
+  const row = document.getElementById(id);
+  const dot = row.querySelector('.h-dot');
+  const statusEl = row.querySelector('.h-status');
+  if (status) {
+    const isBull = ['LONG', 'BULLISH', 'ACCUMULATION', 'BUY TRIGGER', 'OVERSOLD'].includes(status) || status.includes('BUY') || status === 'OOPS!' || status === 'SMASH DAY' || status === 'INSIDE DAY' || status === 'OUTSIDE DAY';
+    const isBear = ['SHORT', 'BEARISH', 'DISTRIBUTION', 'SELL TRIGGER', 'OVERBOUGHT'].includes(status) || status.includes('SELL');
+    dot.style.background = isBull ? '#4ade80' : isBear ? '#ef4444' : '#fbbf24';
+    statusEl.textContent = status;
+    statusEl.style.color = isBull ? '#4ade80' : isBear ? '#ef4444' : '#fbbf24';
+  } else {
+    dot.style.background = '#4a5a7e';
+    statusEl.textContent = '—';
+    statusEl.style.color = '#4a5a7e';
+  }
+}
+
+// Find recent swing point for stop placement
+function findSwingStop(idx) {
+  let swingLow = Infinity;
+  const lookback = Math.min(10, idx);
+  for (let i = idx - lookback; i < idx; i++) {
+    swingLow = Math.min(swingLow, priceData[i].low);
+  }
+  return Math.max(10, Math.abs(priceData[idx].close - swingLow));
+}
+
+// ========== CHARTS ==========
+const priceCtx = document.getElementById('priceChart').getContext('2d');
+const priceChart = new Chart(priceCtx, {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [{
+      label: 'Close',
+      data: closes,
+      borderColor: '#00d4ff',
+      backgroundColor: 'rgba(0,212,255,0.05)',
+      borderWidth: 2, fill: true, pointRadius: 0, tension: 0.1
+    }, {
+      label: 'High',
+      data: highs,
+      borderColor: 'rgba(52,211,153,0.3)',
+      borderWidth: 1, pointRadius: 0, borderDash: [2,2], fill: false
+    }, {
+      label: 'Low',
+      data: lows,
+      borderColor: 'rgba(239,68,68,0.3)',
+      borderWidth: 1, pointRadius: 0, borderDash: [2,2], fill: false
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: true, position: 'top', labels: { color: '#6b7b9e', font: { size: 10 } } } },
+    scales: {
+      x: { ticks: { color: '#4a5a7e', font: { size: 9 }, maxTicksLimit: 15 }, grid: { color: '#1e2a4a' } },
+      y: { ticks: { color: '#4a5a7e', font: { size: 10 } }, grid: { color: '#1e2a4a' }, position: 'right' }
+    }
+  }
+});
+
+const wrCtx = document.getElementById('wrChart').getContext('2d');
+new Chart(wrCtx, {
+  type: 'line',
+  data: { labels, datasets: [{ label: '%R', data: wrData, borderColor: '#00d4ff', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 }] },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      annotation: {
+        annotations: {
+          overbought: { type: 'line', yMin: -20, yMax: -20, borderColor: '#ef4444', borderWidth: 1, borderDash: [4,4], label: { content: '-20 OB', display: true, color: '#ef4444', font: { size: 9 }, position: 'start' } },
+          oversold: { type: 'line', yMin: -80, yMax: -80, borderColor: '#34d399', borderWidth: 1, borderDash: [4,4], label: { content: '-80 OS', display: true, color: '#34d399', font: { size: 9 }, position: 'start' } },
+          mid: { type: 'line', yMin: -50, yMax: -50, borderColor: '#1e2a4a', borderWidth: 1, borderDash: [2,4] }
+        }
+      }
+    },
+    scales: {
+      x: { display: false },
+      y: { min: -100, max: 0, ticks: { color: '#4a5a7e', font: { size: 9 }, stepSize: 20 }, grid: { color: '#1e2a4a' }, position: 'right' }
+    }
+  }
+});
+
+const uoCtx = document.getElementById('uoChart').getContext('2d');
+new Chart(uoCtx, {
+  type: 'line',
+  data: { labels, datasets: [{ label: 'UO', data: uoData, borderColor: '#a78bfa', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 }] },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      annotation: {
+        annotations: {
+          upper: { type: 'line', yMin: 70, yMax: 70, borderColor: '#ef4444', borderWidth: 1, borderDash: [4,4], label: { content: '70', display: true, color: '#ef4444', font: { size: 9 }, position: 'start' } },
+          lower: { type: 'line', yMin: 30, yMax: 30, borderColor: '#34d399', borderWidth: 1, borderDash: [4,4], label: { content: '30', display: true, color: '#34d399', font: { size: 9 }, position: 'start' } },
+          mid: { type: 'line', yMin: 50, yMax: 50, borderColor: '#1e2a4a', borderWidth: 1, borderDash: [2,4] }
+        }
+      }
+    },
+    scales: {
+      x: { display: false },
+      y: { min: 0, max: 100, ticks: { color: '#4a5a7e', font: { size: 9 }, stepSize: 20 }, grid: { color: '#1e2a4a' }, position: 'right' }
+    }
+  }
+});
+
+const wadCtx = document.getElementById('wadChart').getContext('2d');
+new Chart(wadCtx, {
+  type: 'line',
+  data: { labels, datasets: [{ label: 'W A/D', data: wadData, borderColor: '#f472b6', borderWidth: 1.5, pointRadius: 0, fill: { target: 'origin', above: 'rgba(244,114,182,0.08)', below: 'rgba(244,114,182,0.08)' }, tension: 0.2 }] },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { display: false },
+      y: { ticks: { color: '#4a5a7e', font: { size: 9 } }, grid: { color: '#1e2a4a' }, position: 'right' }
+    }
+  }
+});
+
+function setTimeframe(tf) {
+  document.querySelectorAll('.timeframe-btns button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+// Initialize
+updateCards();
+
+// Live tick simulation (2s interval)
+setInterval(() => {
+  const last = priceData[priceData.length - 1];
+  const tick = (Math.random() - 0.5) * 4;
+  last.close = +(last.close + tick).toFixed(2);
+  if (last.close > last.high) last.high = last.close;
+  if (last.close < last.low) last.low = last.close;
+  closes[closes.length - 1] = last.close;
+  highs[highs.length - 1] = last.high;
+  lows[lows.length - 1] = last.low;
+
+  // Recalc %R
+  const period = 14;
+  const idx = priceData.length - 1;
+  let hh = -Infinity, ll = Infinity;
+  for (let j = idx - period + 1; j <= idx; j++) {
+    hh = Math.max(hh, priceData[j].high);
+    ll = Math.min(ll, priceData[j].low);
+  }
+  wrData[idx] = +((hh === ll ? -50 : ((hh - last.close) / (hh - ll)) * -100).toFixed(2));
+
+  // Redetect patterns and signals
+  patterns = detectPatterns();
+  failureSwing = detectFailureSwing(wrData);
+
+  priceChart.update('none');
+  updateCards();
+}, 8000);
+</script>
+
+</body>
+</html>
