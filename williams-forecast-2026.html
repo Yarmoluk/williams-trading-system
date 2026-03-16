@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Larry Williams Forecast 2026 — Stocks & Indices</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e17;--card:#111827;--border:#1e293b;--text:#e2e8f0;--muted:#94a3b8;
+  --accent:#3b82f6;--green:#22c55e;--yellow:#eab308;--orange:#f97316;--red:#ef4444;
+  --bright-green:#4ade80;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;min-height:100vh}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(10,14,23,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.nav h1{font-size:1.1rem;font-weight:700;color:var(--accent);white-space:nowrap}
+.nav-toggle{display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.nav-toggle button{padding:10px 24px;background:transparent;border:none;color:var(--muted);font-weight:600;cursor:pointer;font-size:.875rem;transition:all .2s}
+.nav-toggle button.active{background:var(--accent);color:#fff}
+.nav-toggle button:hover:not(.active){background:rgba(59,130,246,.15);color:var(--text)}
+.nav-quote{margin-left:auto;font-style:italic;color:var(--muted);font-size:.75rem;max-width:400px;text-align:right}
+
+/* SECTIONS */
+.section{display:none;padding:24px;max-width:1400px;margin:0 auto}
+.section.active{display:block}
+
+/* METHODOLOGY SLIDES */
+.slide{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px 36px;margin-bottom:24px;position:relative;overflow:hidden}
+.slide::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--accent);border-radius:4px 0 0 4px}
+.slide-number{position:absolute;top:16px;right:20px;font-size:.75rem;color:var(--muted);font-weight:700;letter-spacing:1px}
+.slide h2{font-size:1.35rem;font-weight:700;margin-bottom:16px;color:#fff}
+.slide h3{font-size:1rem;font-weight:600;color:var(--accent);margin:16px 0 8px}
+.slide p,.slide li{font-size:.925rem;color:var(--text);margin-bottom:8px}
+.slide ul{padding-left:20px}
+.slide li{list-style:disc}
+.slide .highlight{background:rgba(59,130,246,.12);border-left:3px solid var(--accent);padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0;font-weight:500}
+.slide .warning{background:rgba(234,179,8,.1);border-left:3px solid var(--yellow);padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0}
+.slide .bullish{background:rgba(34,197,94,.1);border-left:3px solid var(--green);padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0;font-weight:500}
+.slide .phase-box{display:inline-block;padding:6px 14px;border-radius:6px;font-weight:700;font-size:.85rem;margin:4px 4px 4px 0}
+.phase-caution{background:rgba(234,179,8,.15);color:var(--yellow)}
+.phase-decline{background:rgba(239,68,68,.15);color:var(--red)}
+.phase-rally{background:rgba(34,197,94,.15);color:var(--green)}
+.slide .stat{display:inline-block;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);padding:4px 12px;border-radius:20px;font-size:.8rem;font-weight:600;color:var(--accent);margin:2px}
+.conflict-box{background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.3);border-radius:12px;padding:16px;margin:12px 0}
+.conflict-box h4{color:var(--orange);font-size:.9rem;margin-bottom:8px}
+.resolution-box{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.3);border-radius:12px;padding:16px;margin:12px 0}
+.resolution-box h4{color:var(--green);font-size:.9rem;margin-bottom:8px}
+
+/* CYCLE CHART ON SLIDE */
+.cycle-visual{margin:20px 0;position:relative;height:100px;background:linear-gradient(90deg,rgba(34,197,94,.05),rgba(239,68,68,.08) 25%,rgba(239,68,68,.12) 45%,rgba(34,197,94,.08) 60%,rgba(34,197,94,.15) 100%);border-radius:12px;overflow:hidden;border:1px solid var(--border)}
+.cycle-label{position:absolute;bottom:8px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.cycle-marker{position:absolute;top:0;height:100%;width:2px;background:var(--accent);z-index:2}
+.cycle-marker::after{content:'NOW';position:absolute;top:4px;left:6px;font-size:.65rem;font-weight:700;color:var(--accent);white-space:nowrap}
+
+/* DASHBOARD */
+.stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}
+.stat-card .val{font-size:2rem;font-weight:800;color:#fff}
+.stat-card .label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+.stat-card.green .val{color:var(--green)}
+.stat-card.yellow .val{color:var(--yellow)}
+.stat-card.blue .val{color:var(--accent)}
+
+/* CYCLE POSITION CHART */
+.cycle-position-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px}
+.cycle-position-card h3{font-size:1rem;font-weight:700;margin-bottom:16px;color:#fff}
+
+/* FILTER */
+.filter-row{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+.filter-row label{font-size:.8rem;color:var(--muted);font-weight:600}
+.filter-row select,.filter-row input{background:var(--card);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;font-size:.85rem}
+.filter-row input{width:200px}
+.filter-btn{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s}
+.filter-btn.active,.filter-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* TABLE */
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+thead{background:rgba(30,41,59,.6)}
+th{padding:14px 16px;text-align:left;font-weight:700;color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;user-select:none;white-space:nowrap;border-bottom:1px solid var(--border)}
+th:hover{color:var(--accent)}
+th .sort-arrow{margin-left:4px;opacity:.4}
+th.sorted .sort-arrow{opacity:1;color:var(--accent)}
+td{padding:12px 16px;border-bottom:1px solid rgba(30,41,59,.4);vertical-align:middle}
+tr:hover{background:rgba(59,130,246,.04)}
+.ticker{font-weight:700;color:#fff;font-family:'SF Mono',Monaco,Consolas,monospace}
+.confidence-pill{display:inline-block;padding:3px 10px;border-radius:12px;font-weight:700;font-size:.8rem;min-width:48px;text-align:center}
+.conf-90{background:rgba(74,222,128,.2);color:var(--bright-green)}
+.conf-80{background:rgba(34,197,94,.15);color:var(--green)}
+.conf-70{background:rgba(234,179,8,.15);color:var(--yellow)}
+.conf-low{background:rgba(249,115,22,.15);color:var(--orange)}
+.phase-badge{display:inline-block;padding:4px 10px;border-radius:6px;font-weight:600;font-size:.75rem;white-space:nowrap}
+.phase-decline-badge{background:rgba(239,68,68,.12);color:#f87171}
+.phase-approaching-badge{background:rgba(234,179,8,.12);color:var(--yellow)}
+.phase-accumulate-badge{background:rgba(59,130,246,.12);color:var(--accent)}
+.notes-cell{max-width:280px;font-size:.8rem;color:var(--muted);line-height:1.4}
+
+/* DISCLAIMER */
+.disclaimer{text-align:center;padding:40px 24px 32px;font-size:.75rem;color:var(--muted);max-width:700px;margin:0 auto;border-top:1px solid var(--border);margin-top:40px}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .nav{flex-direction:column;align-items:flex-start}
+  .nav-quote{margin-left:0;text-align:left;margin-top:8px}
+  .slide{padding:20px}
+  .section{padding:16px}
+  .table-wrap{overflow-x:auto}
+  table{min-width:900px}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <h1>LARRY WILLIAMS FORECAST 2026</h1>
+  <div class="nav-toggle">
+    <button class="active" onclick="showSection('methodology',this)">METHODOLOGY</button>
+    <button onclick="showSection('dashboard',this)">DASHBOARD</button>
+  </div>
+  <div class="nav-quote">"Wealth is not amassed with just good market calls. It also requires correct money management." — Larry Williams</div>
+</nav>
+
+<!-- ===== METHODOLOGY ===== -->
+<div id="methodology" class="section active">
+
+  <!-- SLIDE 1 -->
+  <div class="slide">
+    <span class="slide-number">01 / 08</span>
+    <h2>The Big Picture</h2>
+    <div class="highlight">"After the year begins, there will be a decline, setting up a significant rally starting in the summer."</div>
+    <p>2026 is a <strong>4-year cycle buy year</strong>. This cycle has appeared like clockwork:</p>
+    <p style="margin:12px 0;font-family:monospace;color:var(--muted);font-size:.85rem">
+      1962 &rarr; 1966 &rarr; 1970 &rarr; 1974 &rarr; 1978 &rarr; 1982 &rarr; 1986 &rarr; 1990 &rarr; 1994 &rarr; 1998 &rarr; 2002 &rarr; 2006 &rarr; 2010 &rarr; 2014 &rarr; 2018 &rarr; 2022 &rarr; <span style="color:var(--accent);font-weight:700">2026</span>
+    </p>
+    <p>The 4-year cycle has held for <span class="stat">60+ years out of sample</span>. Adding 4 years to the 2022 low brings us to a buy point in 2026.</p>
+  </div>
+
+  <!-- SLIDE 2 -->
+  <div class="slide">
+    <span class="slide-number">02 / 08</span>
+    <h2>The 2026 Cycle Projection (Chart 4)</h2>
+    <p>Williams calls this his <strong>"most reliable of all cycle waves for stocks in the United States."</strong></p>
+    <div class="cycle-visual">
+      <div style="position:absolute;left:0;top:0;width:12%;height:100%;background:rgba(34,197,94,.1)"></div>
+      <div style="position:absolute;left:12%;top:0;width:33%;height:100%;background:rgba(239,68,68,.1)"></div>
+      <div style="position:absolute;left:45%;top:0;width:55%;height:100%;background:rgba(34,197,94,.12)"></div>
+      <span class="cycle-label" style="left:2%;color:var(--green)">Jan-Feb High</span>
+      <span class="cycle-label" style="left:18%;color:var(--red)">Decline (Feb-Jun)</span>
+      <span class="cycle-label" style="left:42%;color:var(--yellow)">Jun 16 Low</span>
+      <span class="cycle-label" style="left:62%;color:var(--green)">Rally (Jul-Dec)</span>
+      <div class="cycle-marker" style="left:20.5%"></div>
+    </div>
+    <ul>
+      <li>Decline from mid-February to late May/June &mdash; <span class="stat">down 70% of the time historically</span></li>
+      <li>Major low around <strong>June 16th</strong> ("if pushed for the absolute low")</li>
+      <li>Rally from summer onward &mdash; <span class="stat">up 90% of the time historically</span></li>
+    </ul>
+  </div>
+
+  <!-- SLIDE 3 -->
+  <div class="slide">
+    <span class="slide-number">03 / 08</span>
+    <h2>Decennial Pattern (Years Ending in 6)</h2>
+    <p>Based on Edgar Lawrence Smith's work from the 1930s, years ending in <strong>6</strong> show a distinctive pattern:</p>
+    <ul>
+      <li>Strong preponderance of <strong>rising markets from July to November</strong></li>
+      <li>Weakness starts in May, important low in late July</li>
+      <li>Confirms the 4-year cycle forecast</li>
+    </ul>
+    <div class="bullish">Decennial pattern and 4-year cycle both point to: <strong>summer low &rarr; strong second-half rally</strong>.</div>
+  </div>
+
+  <!-- SLIDE 4 -->
+  <div class="slide">
+    <span class="slide-number">04 / 08</span>
+    <h2>Presidential Cycle</h2>
+    <p>2026 = <strong>2nd year of presidential term</strong>. The historical pattern shows:</p>
+    <ul>
+      <li>March peak</li>
+      <li>Decline into summer</li>
+      <li>Massive rally from July onward</li>
+    </ul>
+    <div class="highlight">"The pattern is apparent regardless of who is partying in the White House."</div>
+    <div class="warning">
+      <strong>Marc Chaikin</strong> predicted a bear market starting March 16, 2026. Williams disagrees on the severity but agrees on March weakness. Today is that date.
+    </div>
+  </div>
+
+  <!-- SLIDE 5 -->
+  <div class="slide">
+    <span class="slide-number">05 / 08</span>
+    <h2>Natural Cycle</h2>
+    <p>Williams' proprietary Natural Cycle was the <strong>best forecast for 2025</strong> (nailed the sell-off at year start).</p>
+    <p>For 2026, the Natural Cycle shows: <strong>almost straight-up continuation of the bull market.</strong></p>
+    <ul>
+      <li>"Look for a nice up-move beginning at end of April" (post tax day)</li>
+      <li>"Expect a trend move into August"</li>
+    </ul>
+    <div class="conflict-box">
+      <h4>CONFLICT</h4>
+      <p style="font-size:.875rem">The Natural Cycle is bullish all year. The 4-year cycle and decennial pattern show a summer low. Williams acknowledges this tension.</p>
+    </div>
+    <div class="resolution-box">
+      <h4>RESOLUTION</h4>
+      <p style="font-size:.875rem">"One thing is clear from both views &mdash; <strong>expect higher prices in 2026, with powerhouse prices from May onwards. Buy market breaks.</strong>"</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 6 -->
+  <div class="slide">
+    <span class="slide-number">06 / 08</span>
+    <h2>Very Long-Term Cycle</h2>
+    <p>This wave has been observed <strong>23 times</strong> since 1880.</p>
+    <ul>
+      <li><strong>21 of 23 times</strong> produced strong rallies</li>
+      <li>That's a <span class="stat">91% hit rate</span></li>
+    </ul>
+    <div class="bullish" style="font-size:1.1rem;text-align:center">
+      +90% probability &mdash; "2026 will be another bull market. Buy big breaks / sell big rallies."
+    </div>
+  </div>
+
+  <!-- SLIDE 7 -->
+  <div class="slide">
+    <span class="slide-number">07 / 08</span>
+    <h2>Fundamentals</h2>
+    <h3>Inflation</h3>
+    <p>Inflation cycle turning UP in 2026 &mdash; but <strong>early inflation is BULLISH for stocks</strong> (not bearish). Stocks lead inflation by ~15 months.</p>
+    <h3>Recession</h3>
+    <p>No recession coming. The recession cycle says don't worry until mid-2027. FRED Smoothed Recession Probabilities = near zero.</p>
+    <h3>Employment</h3>
+    <p>Employment cycle low = end of Q1 2026, then improving &mdash; historically bullish for stocks.</p>
+    <h3>Fed Funds</h3>
+    <p>Rates declining &mdash; "every time the discount rate dropped, stocks rallied."</p>
+    <h3>Valuation</h3>
+    <p>DJIA P/E at <strong>23.15 (forward)</strong> &mdash; better than last year's 27. Suggests ~7.5% annual return. <span class="stat">P/E > 28 = cause for concern</span>. Watch earnings.</p>
+  </div>
+
+  <!-- SLIDE 8 -->
+  <div class="slide">
+    <span class="slide-number">08 / 08</span>
+    <h2>The Playbook</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;margin:16px 0">
+      <div class="phase-box phase-caution">PHASE 1: JAN-FEB &mdash; Market tops, be cautious</div>
+      <div class="phase-box phase-decline">PHASE 2: MAR-JUN &mdash; Decline. Accumulate on weakness. Target: Jun 16</div>
+      <div class="phase-box phase-rally">PHASE 3: JUL-DEC &mdash; Major rally. "Powerhouse prices"</div>
+    </div>
+    <div class="highlight">
+      <strong>KEY RULE:</strong> "Buy market breaks" &mdash; use cycle timing for WHEN, not magnitude. The wave structure tells you the odds of rally vs. decline, not how far it moves.
+    </div>
+    <p style="margin-top:16px;color:var(--muted)"><strong>Where we are today (Mar 16):</strong> We are in Phase 2. The decline from mid-February is underway. Cycle says this weakness persists into May/June. Accumulate quality names on pullbacks.</p>
+  </div>
+
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div id="dashboard" class="section">
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat-card blue"><div class="val" id="stat-total">0</div><div class="label">Stocks Tracked</div></div>
+    <div class="stat-card green"><div class="val" id="stat-avg">0%</div><div class="label">Avg Confidence</div></div>
+    <div class="stat-card yellow"><div class="val" id="stat-decline">0</div><div class="label">In Decline Phase</div></div>
+    <div class="stat-card" style=""><div class="val" id="stat-approaching" style="color:var(--orange)">0</div><div class="label">Approaching Low</div></div>
+  </div>
+
+  <!-- CYCLE POSITION CHART -->
+  <div class="cycle-position-card">
+    <h3>WHERE ARE WE NOW? &mdash; 2026 Cycle Position (March 16)</h3>
+    <canvas id="cycleChart" height="80"></canvas>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filter-row">
+    <label>Category:</label>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="filter-btn active" onclick="filterCategory('all',this)">All</button>
+      <button class="filter-btn" onclick="filterCategory('US Index',this)">US Indices</button>
+      <button class="filter-btn" onclick="filterCategory('Global Index',this)">Global Indices</button>
+      <button class="filter-btn" onclick="filterCategory('Stock',this)">Stocks</button>
+    </div>
+    <label style="margin-left:16px">Search:</label>
+    <input type="text" id="searchInput" placeholder="Ticker or name..." oninput="applyFilters()">
+    <label style="margin-left:16px">Min Confidence:</label>
+    <select id="minConf" onchange="applyFilters()">
+      <option value="0">All</option>
+      <option value="70">70%+</option>
+      <option value="80">80%+</option>
+      <option value="90">90%+</option>
+    </select>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrap">
+    <table id="forecastTable">
+      <thead>
+        <tr>
+          <th onclick="sortTable(0)">Ticker <span class="sort-arrow">&#9650;</span></th>
+          <th onclick="sortTable(1)">Name <span class="sort-arrow">&#9650;</span></th>
+          <th onclick="sortTable(2)">Category <span class="sort-arrow">&#9650;</span></th>
+          <th onclick="sortTable(3)">Confidence <span class="sort-arrow">&#9650;</span></th>
+          <th onclick="sortTable(4)">Current Phase <span class="sort-arrow">&#9650;</span></th>
+          <th onclick="sortTable(5)">Sweet Spot <span class="sort-arrow">&#9650;</span></th>
+          <th>Key Cycle Notes</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="disclaimer">
+  Based on Larry Williams Forecast 2026. Cycle projections are probabilistic, not guarantees.<br>Past performance does not indicate future results.
+</div>
+
+<script>
+// ===== DATA =====
+const data = [
+  // US INDICES
+  {ticker:"SPX",name:"S&P 500",cat:"US Index",conf:78,phase:"Decline",sweet:"Apr",notes:"Strong wave from ~Apr onwards. 4-yr cycle buy year."},
+  {ticker:"NDX",name:"Nasdaq 100",cat:"US Index",conf:84,phase:"Decline",sweet:"May",notes:"Strong rally wave starting mid-year."},
+  {ticker:"DJT",name:"DJIA Transports",cat:"US Index",conf:81,phase:"Decline",sweet:"Jul",notes:"Rally from ~Jul. Transport confirmation important."},
+  {ticker:"DJU",name:"DJIA Utilities",cat:"US Index",conf:80,phase:"Decline",sweet:"May",notes:"Choppy but generally up."},
+  {ticker:"DJIM",name:"DJIA Islamic Titans",cat:"US Index",conf:96,phase:"Decline",sweet:"Apr",notes:"STRONGEST confidence in report. Watch closely."},
+  {ticker:"QQQ",name:"Invesco QQQ Trust",cat:"US Index",conf:80,phase:"Decline",sweet:"May",notes:"Decline into May then rally per chart."},
+
+  // GLOBAL INDICES
+  {ticker:"AS51",name:"Australia (ASX)",cat:"Global Index",conf:85,phase:"Decline",sweet:"May",notes:"Strong cycle confidence."},
+  {ticker:"BVSP",name:"Brazil (Bovespa)",cat:"Global Index",conf:90,phase:"Decline",sweet:"Jun",notes:"90% confidence. Emerging market leader."},
+  {ticker:"GSPTSE",name:"Canada (TSX)",cat:"Global Index",conf:72,phase:"Decline",sweet:"Jun",notes:"Moderate confidence. Commodity exposure."},
+  {ticker:"SHCOMP",name:"China (Shanghai)",cat:"Global Index",conf:70,phase:"Decline",sweet:"May",notes:"Lower confidence. Policy-dependent."},
+  {ticker:"FCHI",name:"France (CAC 40)",cat:"Global Index",conf:60,phase:"Decline",sweet:"Jul",notes:"Weakest global confidence. Europe risk."},
+  {ticker:"GDAXI",name:"Germany (DAX)",cat:"Global Index",conf:83,phase:"Decline",sweet:"May",notes:"Strong European play."},
+  {ticker:"UKX",name:"Great Britain (FTSE)",cat:"Global Index",conf:71,phase:"Decline",sweet:"Jun",notes:"Moderate confidence."},
+  {ticker:"HSI",name:"Hong Kong (Hang Seng)",cat:"Global Index",conf:83,phase:"Approaching Low",sweet:"Apr",notes:"Strong cycle. China rebound play."},
+  {ticker:"NIFTY",name:"India (Nifty 50)",cat:"Global Index",conf:80,phase:"Decline",sweet:"May",notes:"Solid cycle confidence."},
+  {ticker:"TA35",name:"Israel (TA-35)",cat:"Global Index",conf:77,phase:"Decline",sweet:"Jun",notes:"Geopolitical risk overlay."},
+  {ticker:"FTSEMIB",name:"Italy (MIB)",cat:"Global Index",conf:71,phase:"Decline",sweet:"Jun",notes:"Moderate. Southern Europe."},
+  {ticker:"NKY",name:"Japan (Nikkei)",cat:"Global Index",conf:67,phase:"Decline",sweet:"Jun",notes:"Lower confidence. Yen sensitivity."},
+  {ticker:"KOSPI",name:"Korea (KOSPI)",cat:"Global Index",conf:0,phase:"Decline",sweet:"Jun",notes:"No confidence % given in report."},
+
+  // STOCKS
+  {ticker:"AMD",name:"Advanced Micro Devices",cat:"Stock",conf:84,phase:"Decline",sweet:"Apr",notes:"Strong cycle. Semiconductor leader."},
+  {ticker:"AAPL",name:"Apple",cat:"Stock",conf:82,phase:"Decline",sweet:"May",notes:"Two waves noted (72%/82%). Higher wave in H2."},
+  {ticker:"AMZN",name:"Amazon",cat:"Stock",conf:67,phase:"Decline",sweet:"May",notes:"Lower confidence than FAANG peers."},
+  {ticker:"AAL",name:"American Airlines",cat:"Stock",conf:73,phase:"Decline",sweet:"Jun",notes:"Travel cycle. Summer travel tailwind."},
+  {ticker:"AXP",name:"American Express",cat:"Stock",conf:70,phase:"Decline",sweet:"May",notes:"Financial sector. Consumer spending proxy."},
+  {ticker:"ASML",name:"ASML Holdings",cat:"Stock",conf:85,phase:"Decline",sweet:"Apr",notes:"Semiconductor equipment. High confidence."},
+  {ticker:"BABA",name:"Alibaba",cat:"Stock",conf:86,phase:"Approaching Low",sweet:"Apr",notes:"Strong cycle. China reopening play."},
+  {ticker:"BAC",name:"Bank of America",cat:"Stock",conf:70,phase:"Decline",sweet:"Jun",notes:"Rate-sensitive. Fed easing tailwind."},
+  {ticker:"BRK-B",name:"Berkshire Hathaway",cat:"Stock",conf:90,phase:"Decline",sweet:"May",notes:"90% confidence. Blue chip safety."},
+  {ticker:"BKNG",name:"Booking Holdings",cat:"Stock",conf:73,phase:"Decline",sweet:"May",notes:"Travel cycle aligned."},
+  {ticker:"CAT",name:"Caterpillar",cat:"Stock",conf:60,phase:"Decline",sweet:"Jul",notes:"Weakest stock confidence. Infrastructure cycle."},
+  {ticker:"CB",name:"Chubb",cat:"Stock",conf:72,phase:"Decline",sweet:"May",notes:"Insurance. Defensive quality."},
+  {ticker:"CMG",name:"Chipotle",cat:"Stock",conf:80,phase:"Decline",sweet:"May",notes:"Consumer discretionary."},
+  {ticker:"COIN",name:"Coinbase",cat:"Stock",conf:70,phase:"Decline",sweet:"May",notes:"Crypto proxy. Volatile."},
+  {ticker:"COST",name:"Costco",cat:"Stock",conf:90,phase:"Decline",sweet:"Apr",notes:"Two waves (78%/90%). Defensive growth."},
+  {ticker:"CRWD",name:"CrowdStrike",cat:"Stock",conf:87,phase:"Decline",sweet:"Apr",notes:"Cybersecurity leader. High confidence."},
+  {ticker:"CSCO",name:"Cisco Systems",cat:"Stock",conf:85,phase:"Decline",sweet:"May",notes:"Networking. Solid cycle."},
+  {ticker:"CVX",name:"Chevron",cat:"Stock",conf:0,phase:"Decline",sweet:"Jun",notes:"No % shown in report. Energy sector."},
+  {ticker:"DAL",name:"Delta Air Lines",cat:"Stock",conf:90,phase:"Decline",sweet:"May",notes:"90% confidence. Airline leader."},
+  {ticker:"DIS",name:"Walt Disney",cat:"Stock",conf:80,phase:"Decline",sweet:"May",notes:"Entertainment/streaming recovery."},
+  {ticker:"F",name:"Ford Motor",cat:"Stock",conf:63,phase:"Decline",sweet:"Jun",notes:"Lower confidence. EV transition risk."},
+  {ticker:"FAST",name:"Fastenal",cat:"Stock",conf:80,phase:"Decline",sweet:"May",notes:"Industrial distribution. Steady."},
+  {ticker:"GM",name:"General Motors",cat:"Stock",conf:0,phase:"Decline",sweet:"Jun",notes:"No clear % in report. Auto sector."},
+  {ticker:"GOOG",name:"Alphabet",cat:"Stock",conf:90,phase:"Decline",sweet:"Apr",notes:"90% confidence. AI/search dominance."},
+  {ticker:"HD",name:"Home Depot",cat:"Stock",conf:76,phase:"Decline",sweet:"May",notes:"Housing cycle exposure."},
+  {ticker:"IBM",name:"IBM",cat:"Stock",conf:80,phase:"Decline",sweet:"May",notes:"Enterprise AI play. Solid cycle."},
+  {ticker:"JNJ",name:"Johnson & Johnson",cat:"Stock",conf:70,phase:"Decline",sweet:"Jun",notes:"Defensive healthcare."},
+  {ticker:"KHC",name:"Kraft Heinz",cat:"Stock",conf:80,phase:"Decline",sweet:"May",notes:"Consumer staples. Defensive."},
+  {ticker:"KMI",name:"Kinder Morgan",cat:"Stock",conf:83,phase:"Decline",sweet:"May",notes:"Midstream energy. Yield play."},
+  {ticker:"KO",name:"Coca-Cola",cat:"Stock",conf:75,phase:"Decline",sweet:"May",notes:"Consumer staples. Dividend king."},
+  {ticker:"LLY",name:"Eli Lilly",cat:"Stock",conf:80,phase:"Decline",sweet:"May",notes:"Pharma/GLP-1 leader."},
+  {ticker:"MO",name:"Altria Group",cat:"Stock",conf:80,phase:"Decline",sweet:"May",notes:"Tobacco. High yield defensive."},
+  {ticker:"META",name:"Meta Platforms",cat:"Stock",conf:80,phase:"Decline",sweet:"May",notes:"Social/AI infrastructure."},
+  {ticker:"MRK",name:"Merck",cat:"Stock",conf:81,phase:"Decline",sweet:"May",notes:"Pharma. Keytruda lifecycle."},
+  {ticker:"MU",name:"Micron Technology",cat:"Stock",conf:67,phase:"Decline",sweet:"Jun",notes:"Memory semi. Lower confidence."},
+  {ticker:"MSFT",name:"Microsoft",cat:"Stock",conf:75,phase:"Decline",sweet:"May",notes:"Cloud/AI. Moderate confidence."},
+  {ticker:"MSTR",name:"MicroStrategy",cat:"Stock",conf:90,phase:"Decline",sweet:"Apr",notes:"90% confidence. Bitcoin proxy."},
+  {ticker:"NFLX",name:"Netflix",cat:"Stock",conf:80,phase:"Decline",sweet:"May",notes:"Streaming leader."},
+  {ticker:"NVDA",name:"NVIDIA",cat:"Stock",conf:80,phase:"Decline",sweet:"May",notes:"AI chip leader. GPU supercycle."},
+  {ticker:"ONON",name:"On Holding",cat:"Stock",conf:78,phase:"Decline",sweet:"May",notes:"Athletic footwear growth."},
+  {ticker:"ORCL",name:"Oracle",cat:"Stock",conf:84,phase:"Decline",sweet:"Apr",notes:"Cloud infrastructure. High confidence."},
+  {ticker:"OXY",name:"Occidental Petroleum",cat:"Stock",conf:74,phase:"Decline",sweet:"Jun",notes:"Energy. Buffett position."},
+  {ticker:"PFE",name:"Pfizer",cat:"Stock",conf:72,phase:"Decline",sweet:"Jun",notes:"Pharma. Post-COVID reset."},
+  {ticker:"PG",name:"Procter & Gamble",cat:"Stock",conf:80,phase:"Decline",sweet:"May",notes:"Consumer staples. Defensive quality."},
+  {ticker:"PLTR",name:"Palantir",cat:"Stock",conf:80,phase:"Decline",sweet:"May",notes:"AI/data analytics. Gov + commercial."},
+  {ticker:"RITM",name:"Rithm Capital",cat:"Stock",conf:90,phase:"Decline",sweet:"May",notes:"90% confidence. Mortgage REIT."},
+  {ticker:"SBUX",name:"Starbucks",cat:"Stock",conf:93,phase:"Approaching Low",sweet:"Mar",notes:"Two waves (93%/85%). HIGHEST stock confidence. Near sweet spot."},
+  {ticker:"SHEL",name:"Shell",cat:"Stock",conf:73,phase:"Decline",sweet:"Jun",notes:"Energy major. Global exposure."},
+  {ticker:"SHOP",name:"Shopify",cat:"Stock",conf:80,phase:"Decline",sweet:"May",notes:"E-commerce platform."},
+  {ticker:"TGT",name:"Target",cat:"Stock",conf:77,phase:"Decline",sweet:"May",notes:"Retail. Consumer spending proxy."},
+  {ticker:"TSLA",name:"Tesla",cat:"Stock",conf:80,phase:"Decline",sweet:"May",notes:"EV/AI/Energy. High beta."},
+  {ticker:"TSM",name:"Taiwan Semiconductor",cat:"Stock",conf:77,phase:"Decline",sweet:"May",notes:"Foundry leader. Geopolitical risk."},
+  {ticker:"TTD",name:"The Trade Desk",cat:"Stock",conf:80,phase:"Decline",sweet:"May",notes:"Digital advertising."},
+  {ticker:"V",name:"Visa",cat:"Stock",conf:83,phase:"Decline",sweet:"May",notes:"Payments. Consumer spending proxy."},
+  {ticker:"VZ",name:"Verizon",cat:"Stock",conf:80,phase:"Decline",sweet:"Jun",notes:"Telecom. Yield + stability."},
+  {ticker:"WMT",name:"Walmart",cat:"Stock",conf:82,phase:"Decline",sweet:"May",notes:"Retail leader. Defensive growth."},
+  {ticker:"ZM",name:"Zoom Video",cat:"Stock",conf:80,phase:"Decline",sweet:"May",notes:"Enterprise communications."}
+];
+
+// ===== NAVIGATION =====
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-toggle button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ===== TABLE RENDERING =====
+let currentSort = {col: 0, asc: true};
+let activeCategory = 'all';
+
+function confClass(c) {
+  if (c === 0) return 'conf-low';
+  if (c >= 90) return 'conf-90';
+  if (c >= 80) return 'conf-80';
+  if (c >= 70) return 'conf-70';
+  return 'conf-low';
+}
+
+function phaseBadge(p) {
+  if (p === 'Approaching Low') return '<span class="phase-badge phase-approaching-badge">APPROACHING LOW</span>';
+  if (p === 'Accumulate') return '<span class="phase-badge phase-accumulate-badge">ACCUMULATE</span>';
+  return '<span class="phase-badge phase-decline-badge">DECLINE PHASE</span>';
+}
+
+const sweetOrder = {Mar:3,Apr:4,May:5,Jun:6,Jul:7};
+
+function getFiltered() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const minConf = parseInt(document.getElementById('minConf').value);
+  return data.filter(d => {
+    if (activeCategory !== 'all' && d.cat !== activeCategory) return false;
+    if (search && !d.ticker.toLowerCase().includes(search) && !d.name.toLowerCase().includes(search)) return false;
+    if (d.conf < minConf && d.conf !== 0) return false;
+    if (d.conf === 0 && minConf > 0) return false;
+    return true;
+  });
+}
+
+function renderTable(rows) {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = rows.map(d => `<tr>
+    <td class="ticker">${d.ticker}</td>
+    <td>${d.name}</td>
+    <td style="font-size:.8rem;color:var(--muted)">${d.cat}</td>
+    <td><span class="confidence-pill ${confClass(d.conf)}">${d.conf > 0 ? d.conf + '%' : 'N/A'}</span></td>
+    <td>${phaseBadge(d.phase)}</td>
+    <td style="font-weight:600;color:var(--accent)">${d.sweet} 2026</td>
+    <td class="notes-cell">${d.notes}</td>
+  </tr>`).join('');
+  updateStats(rows);
+}
+
+function updateStats(rows) {
+  document.getElementById('stat-total').textContent = rows.length;
+  const withConf = rows.filter(r => r.conf > 0);
+  const avg = withConf.length ? Math.round(withConf.reduce((s,r) => s + r.conf, 0) / withConf.length) : 0;
+  document.getElementById('stat-avg').textContent = avg + '%';
+  document.getElementById('stat-decline').textContent = rows.filter(r => r.phase === 'Decline').length;
+  document.getElementById('stat-approaching').textContent = rows.filter(r => r.phase === 'Approaching Low').length;
+}
+
+function sortTable(col) {
+  if (currentSort.col === col) { currentSort.asc = !currentSort.asc; }
+  else { currentSort.col = col; currentSort.asc = true; }
+  applyFilters();
+  // Update sort arrows
+  document.querySelectorAll('#forecastTable th').forEach((th, i) => {
+    th.classList.toggle('sorted', i === col);
+    const arrow = th.querySelector('.sort-arrow');
+    if (arrow) arrow.innerHTML = (i === col && !currentSort.asc) ? '&#9660;' : '&#9650;';
+  });
+}
+
+function applyFilters() {
+  let rows = getFiltered();
+  const col = currentSort.col;
+  const dir = currentSort.asc ? 1 : -1;
+  const keys = ['ticker','name','cat','conf','phase','sweet'];
+  rows.sort((a, b) => {
+    let va = keys[col] === 'conf' ? a.conf : (keys[col] === 'sweet' ? (sweetOrder[a.sweet]||0) : a[keys[col]]);
+    let vb = keys[col] === 'conf' ? b.conf : (keys[col] === 'sweet' ? (sweetOrder[b.sweet]||0) : b[keys[col]]);
+    if (typeof va === 'string') return va.localeCompare(vb) * dir;
+    return (va - vb) * dir;
+  });
+  renderTable(rows);
+}
+
+function filterCategory(cat, btn) {
+  activeCategory = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+// ===== CYCLE POSITION CHART =====
+function drawCycleChart() {
+  const ctx = document.getElementById('cycleChart').getContext('2d');
+  // Stylized cycle wave for 2026
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  // Approximate cycle projection values (normalized 0-100)
+  const cycleValues = [72, 78, 68, 58, 45, 35, 42, 60, 72, 80, 85, 88];
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [
+        {
+          label: '2026 Cycle Projection',
+          data: cycleValues,
+          borderColor: '#3b82f6',
+          backgroundColor: (ctx2) => {
+            const g = ctx2.chart.ctx.createLinearGradient(0, 0, 0, 300);
+            g.addColorStop(0, 'rgba(59,130,246,.25)');
+            g.addColorStop(1, 'rgba(59,130,246,.02)');
+            return g;
+          },
+          fill: true,
+          tension: 0.4,
+          pointRadius: months.map((m,i) => i===2 ? 8 : (i===5 ? 8 : 4)),
+          pointBackgroundColor: months.map((m,i) => i===2 ? '#eab308' : (i===5 ? '#ef4444' : 'rgba(59,130,246,.6)')),
+          pointBorderColor: months.map((m,i) => i===2 ? '#eab308' : (i===5 ? '#ef4444' : '#3b82f6')),
+          pointBorderWidth: months.map((m,i) => (i===2||i===5) ? 3 : 1),
+          borderWidth: 3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx2) {
+              const labels = {
+                0:'Bull market continues',1:'Cycle peak forming',2:'YOU ARE HERE (Mar 16) — Decline begins',
+                3:'Decline deepening',4:'Weakness / accumulate',5:'TARGET LOW (Jun 16)',
+                6:'Rally begins',7:'Strong uptrend',8:'Bull continues',
+                9:'Powerhouse rally',10:'Cycle strength',11:'Year-end highs'
+              };
+              return labels[ctx2.dataIndex] || '';
+            }
+          },
+          backgroundColor: '#1e293b',
+          titleColor: '#e2e8f0',
+          bodyColor: '#94a3b8',
+          borderColor: '#334155',
+          borderWidth: 1
+        },
+        annotation: {}
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(30,41,59,.5)' },
+          ticks: { color: '#94a3b8', font: { weight: '600' } }
+        },
+        y: {
+          display: false,
+          grid: { display: false }
+        }
+      }
+    },
+    plugins: [{
+      afterDraw: function(chart) {
+        const meta = chart.getDatasetMeta(0);
+        const ctx3 = chart.ctx;
+        // "NOW" marker on March
+        const pt = meta.data[2];
+        ctx3.save();
+        ctx3.font = 'bold 11px Inter, sans-serif';
+        ctx3.fillStyle = '#eab308';
+        ctx3.textAlign = 'center';
+        ctx3.fillText('NOW', pt.x, pt.y - 16);
+        // "LOW" marker on June
+        const pt2 = meta.data[5];
+        ctx3.fillStyle = '#ef4444';
+        ctx3.fillText('TARGET LOW', pt2.x, pt2.y + 20);
+        // "RALLY" marker on Sep
+        const pt3 = meta.data[8];
+        ctx3.fillStyle = '#22c55e';
+        ctx3.fillText('RALLY ZONE', pt3.x, pt3.y - 16);
+        ctx3.restore();
+      }
+    }]
+  });
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  applyFilters();
+  drawCycleChart();
+});
+</script>
+</body>
+</html>
