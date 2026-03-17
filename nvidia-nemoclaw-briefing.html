@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NemoClaw Briefing — What It Means for Us</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0e17; color: #e0e6ed; font-family: -apple-system, 'Segoe UI', sans-serif; }
+
+.header {
+  background: linear-gradient(135deg, #0d1321, #1a1f3a);
+  border-bottom: 2px solid #76b900;
+  padding: 32px 40px;
+  text-align: center;
+}
+.header .badge { display: inline-block; background: #76b900; color: #000; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 4px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+.header h1 { font-size: 32px; color: #fff; margin-bottom: 8px; }
+.header h1 span { color: #76b900; }
+.header .sub { font-size: 14px; color: #6b7b9e; }
+.header .date { font-size: 12px; color: #4a5a7e; margin-top: 8px; }
+
+.container { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+
+/* Slide cards */
+.slide {
+  background: #111827;
+  border: 1px solid #1e2a4a;
+  border-radius: 12px;
+  padding: 32px;
+  margin-bottom: 24px;
+  position: relative;
+}
+.slide::before {
+  content: attr(data-num);
+  position: absolute;
+  top: -12px;
+  left: 24px;
+  background: #76b900;
+  color: #000;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 4px;
+}
+.slide h2 { font-size: 22px; color: #fff; margin-bottom: 16px; line-height: 1.3; }
+.slide h2 .accent { color: #76b900; }
+.slide h3 { font-size: 16px; color: #00d4ff; margin: 20px 0 10px; }
+.slide p { font-size: 15px; color: #94a3b8; line-height: 1.7; margin-bottom: 12px; }
+.slide .highlight {
+  background: #0f172a;
+  border-left: 3px solid #76b900;
+  padding: 16px 20px;
+  border-radius: 0 8px 8px 0;
+  margin: 16px 0;
+}
+.slide .highlight p { margin: 0; color: #e0e6ed; font-size: 14px; }
+.slide .highlight .label { font-size: 10px; color: #76b900; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; font-weight: 700; }
+
+/* Comparison table */
+.comp-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+.comp-table th { text-align: left; font-size: 11px; color: #4a5a7e; text-transform: uppercase; letter-spacing: 1px; padding: 8px 12px; border-bottom: 1px solid #1e2a4a; }
+.comp-table td { font-size: 14px; color: #94a3b8; padding: 10px 12px; border-bottom: 1px solid #1e2a4a; vertical-align: top; }
+.comp-table tr:last-child td { border-bottom: none; }
+.comp-table .col-label { color: #6b7b9e; font-weight: 600; width: 140px; }
+.comp-table .col-nemo { color: #76b900; }
+.comp-table .col-graphify { color: #00d4ff; }
+
+/* Stack diagram */
+.stack { display: flex; flex-direction: column; gap: 2px; margin: 20px 0; }
+.stack-layer {
+  display: flex; align-items: center; padding: 14px 20px;
+  border-radius: 8px; font-size: 14px; font-weight: 600;
+}
+.stack-layer .layer-label { width: 180px; color: #0a0e17; }
+.stack-layer .layer-desc { color: rgba(10,14,23,0.7); font-weight: 400; font-size: 13px; }
+.stack-l1 { background: #334155; color: #e0e6ed; }
+.stack-l1 .layer-label, .stack-l1 .layer-desc { color: #e0e6ed; }
+.stack-l2 { background: #76b900; }
+.stack-l3 { background: #00d4ff; }
+.stack-l4 { background: #fbbf24; }
+.stack-arrow { text-align: center; color: #4a5a7e; font-size: 18px; line-height: 1; padding: 2px 0; }
+
+/* Quote box */
+.quote-box {
+  background: linear-gradient(135deg, #0f172a, #1a1f3a);
+  border: 1px solid #76b900;
+  border-radius: 12px;
+  padding: 32px;
+  text-align: center;
+  margin: 24px 0;
+}
+.quote-box .quote { font-size: 20px; color: #fff; font-style: italic; line-height: 1.6; }
+.quote-box .quote span { color: #76b900; font-weight: 700; }
+
+/* Action items */
+.action-list { list-style: none; margin: 16px 0; }
+.action-list li {
+  background: #0f172a;
+  border: 1px solid #1e2a4a;
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #94a3b8;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.action-list li .num {
+  background: #00d4ff;
+  color: #0a0e17;
+  font-weight: 700;
+  font-size: 11px;
+  min-width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.action-list li strong { color: #e0e6ed; }
+
+/* Partners */
+.partner-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+.partner-tag {
+  background: #1e293b;
+  border: 1px solid #2a3a5c;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 32px;
+  font-size: 11px;
+  color: #334155;
+  border-top: 1px solid #1e2a4a;
+  margin-top: 40px;
+}
+.footer a { color: #4a5a7e; }
+
+/* Key stat */
+.stat-row { display: flex; gap: 16px; margin: 16px 0; flex-wrap: wrap; }
+.stat-box {
+  flex: 1;
+  min-width: 140px;
+  background: #0f172a;
+  border: 1px solid #1e2a4a;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+.stat-box .stat-val { font-size: 28px; font-weight: 700; color: #76b900; }
+.stat-box .stat-label { font-size: 11px; color: #4a5a7e; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">GTC 2026 Briefing</div>
+  <h1>NVIDIA <span>NemoClaw</span> + OpenClaw</h1>
+  <div class="sub">What it is, what it isn't, and why it validates everything we're building</div>
+  <div class="date">March 17, 2026 — Prepared for Chris</div>
+</div>
+
+<div class="container">
+
+  <!-- SLIDE 1: What Happened -->
+  <div class="slide" data-num="01">
+    <h2>What Just <span class="accent">Happened</span></h2>
+    <p>Yesterday at GTC 2026, Jensen Huang announced <strong>NemoClaw</strong> — NVIDIA's enterprise security layer for <strong>OpenClaw</strong>, the fastest-growing open-source AI agent platform in history.</p>
+
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="stat-val">$20B</div>
+        <div class="stat-label">NVIDIA paid for Groq (inference chips)</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val">$72B</div>
+        <div class="stat-label">Global inference spend by 2029</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val">Day 1</div>
+        <div class="stat-label">NemoClaw — alpha release</div>
+      </div>
+    </div>
+
+    <div class="highlight">
+      <div class="label">Bottom Line</div>
+      <p>The AI industry just decided: the future is autonomous agents running locally on your hardware, with enterprise security. NVIDIA is building the kitchen. The question is: <strong>what does the chef know?</strong></p>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: OpenClaw Explained -->
+  <div class="slide" data-num="02">
+    <h2>What Is <span class="accent">OpenClaw</span>?</h2>
+    <p>OpenClaw is the open-source agent runtime — the platform where AI agents ("claws") live and execute tasks. Think of it as the operating system for AI agents. It runs on your local machine, not in the cloud.</p>
+    <p>It became the fastest-growing open-source project ever. Every developer building AI agents is using it or something like it.</p>
+
+    <h3>What Is NemoClaw?</h3>
+    <p>NVIDIA's enterprise wrapper around OpenClaw. One-command install that adds:</p>
+
+    <ul class="action-list">
+      <li><span class="num">1</span><strong>OpenShell Runtime</strong> — sandboxed execution environment. Agents can't leak your data.</li>
+      <li><span class="num">2</span><strong>Privacy Router</strong> — agents use local Nemotron models AND cloud frontier models, with policy controls on what goes where.</li>
+      <li><span class="num">3</span><strong>Security Guardrails</strong> — least-privilege access, network limits, policy enforcement.</li>
+      <li><span class="num">4</span><strong>Runs on</strong> — GeForce RTX, RTX PRO, DGX Spark, DGX Station.</li>
+    </ul>
+
+    <h3>Launch Partners</h3>
+    <div class="partner-row">
+      <span class="partner-tag">Adobe</span>
+      <span class="partner-tag">Salesforce</span>
+      <span class="partner-tag">SAP</span>
+      <span class="partner-tag">CrowdStrike</span>
+      <span class="partner-tag">Dell</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: Jensen Said → We Do -->
+  <div class="slide" data-num="03">
+    <h2>Jensen Said It. <span class="accent">We Build It.</span></h2>
+    <p>Every major assertion from the GTC 2026 keynote — mapped to what Graphify does and the business value.</p>
+
+    <table class="comp-table" style="margin-top:20px;">
+      <tr>
+        <th style="width:40%;">Jensen's Assertion (GTC 2026)</th>
+        <th style="width:30%;">What Graphify Does</th>
+        <th style="width:30%;">Business Value</th>
+      </tr>
+      <tr>
+        <td><strong style="color:#76b900;">"OpenClaw has open sourced the operating system of agentic computers... Now, OpenClaw has made it possible for us to create personal agents."</strong></td>
+        <td>Agents need domain knowledge to be personal. Graphify builds the structured context each agent consumes — your business, your domain, your expertise in .md files.</td>
+        <td style="color:#fbbf24;">Every OpenClaw agent deployed = a customer who needs a knowledge graph. TAM scales with agent adoption.</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#76b900;">"Every company now needs to develop an OpenClaw strategy."</strong></td>
+        <td>Step 1 of that strategy: what does the agent know? Graphify is the pre-engagement layer — structure the knowledge BEFORE you build the agent.</td>
+        <td style="color:#fbbf24;">$5K-$75K per engagement. Every enterprise OpenClaw rollout is a Graphify sales opportunity.</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#76b900;">"Computing demand has increased by 1 million times over the last few years."</strong></td>
+        <td>Graphify reduces compute demand by structuring context upfront. 170x more reasoning paths means fewer tokens, fewer retries, lower inference cost.</td>
+        <td style="color:#fbbf24;">Clients save on inference spend. Graphify pays for itself in reduced token costs.</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#76b900;">NemoClaw adds "policy enforcement, network guardrails and privacy routing" for secure enterprise agents.</strong></td>
+        <td>NemoClaw secures WHERE the agent runs. Graphify secures WHAT the agent knows. Portable .md files stay local — never sent to cloud unless the privacy router allows it.</td>
+        <td style="color:#fbbf24;">Compliance-ready. Knowledge graphs are auditable, version-controlled, and never leave the sandbox.</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#76b900;">"Every SaaS company will become an Agent-as-a-Service company" with token budgets for engineers.</strong></td>
+        <td>Token budgets mean efficiency matters. A Graphify knowledge graph compresses domain expertise into the context window — one-shot answers instead of 50-prompt chains.</td>
+        <td style="color:#fbbf24;">10-100x context compression. Engineers burn fewer tokens. The graph pays for the subscription.</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#76b900;">Vera Rubin delivers "35x token throughput improvement" — inference is the priority.</strong></td>
+        <td>Better hardware makes inference faster. But faster wrong answers are still wrong. Graphify ensures the RIGHT context hits the model on the first pass.</td>
+        <td style="color:#fbbf24;">35x throughput x structured context = exponential quality improvement. Speed without accuracy is noise.</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#76b900;">Nemotron Coalition: 6 frontier model families (language, vision, robotics, driving, biology, climate).</strong></td>
+        <td>Graphify is model-agnostic. Same .md knowledge graph works across ALL 6 Nemotron families. Build once, deploy everywhere.</td>
+        <td style="color:#fbbf24;">One knowledge architecture across the entire Nemotron ecosystem. No vendor lock-in. No retraining.</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#76b900;">"OpenClaw became the fastest-growing open source project in history" — surpassed 3 decades of Linux growth.</strong></td>
+        <td>Linux needed applications. OpenClaw needs domain knowledge. Graphify is the "app store" — pre-built knowledge systems across 27 verticals.</td>
+        <td style="color:#fbbf24;">41 knowledge systems already shipped. First-mover advantage in the context layer while everyone else builds infrastructure.</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#76b900;">NemoClaw is "the policy engine of all the SaaS companies in the world."</strong></td>
+        <td>Graphify is the <strong>knowledge engine</strong> of all the SaaS companies in the world. Policy without knowledge = a locked empty room.</td>
+        <td style="color:#fbbf24;">Complementary positioning. We don't compete with NVIDIA — we complete the stack.</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- SLIDE 4: The Gap -->
+  <div class="slide" data-num="04">
+    <h2>The Gap <span class="accent">Nobody Is Filling</span></h2>
+    <p>Here's what the entire NVIDIA stack gives you:</p>
+
+    <div class="stack">
+      <div class="stack-layer stack-l4"><span class="layer-label">Useful Output</span><span class="layer-desc">What the business actually needs</span></div>
+      <div class="stack-arrow">^</div>
+      <div class="stack-layer stack-l3"><span class="layer-label">??? Context Layer</span><span class="layer-desc">What does the agent actually KNOW about your domain?</span></div>
+      <div class="stack-arrow">^</div>
+      <div class="stack-layer stack-l2"><span class="layer-label">NemoClaw</span><span class="layer-desc">Secure sandbox, guardrails, privacy router</span></div>
+      <div class="stack-arrow">^</div>
+      <div class="stack-layer stack-l1"><span class="layer-label">NVIDIA Hardware</span><span class="layer-desc">RTX, DGX, inference chips, $20B Groq acquisition</span></div>
+    </div>
+
+    <div class="highlight">
+      <div class="label">The Problem</div>
+      <p>An agent running in a perfectly sandboxed NemoClaw environment will still <strong>hallucinate, guess, and fail</strong> if it doesn't have structured domain knowledge. NVIDIA built layers 1 and 2. Nobody is building layer 3.</p>
+    </div>
+
+    <p style="color:#00d4ff;font-weight:600;font-size:16px;margin-top:16px;">That's the Graphify layer.</p>
+  </div>
+
+  <!-- SLIDE 4: Comparison -->
+  <div class="slide" data-num="05">
+    <h2><span class="accent">NemoClaw</span> vs <span style="color:#00d4ff;">Graphify.md</span> — Different Layers</h2>
+    <p>These are not competitors. They're complementary.</p>
+
+    <table class="comp-table">
+      <tr>
+        <th></th>
+        <th class="col-nemo">OpenClaw / NemoClaw</th>
+        <th class="col-graphify">Graphify.md</th>
+      </tr>
+      <tr>
+        <td class="col-label">Layer</td>
+        <td>Agent runtime & execution</td>
+        <td>Knowledge architecture & context</td>
+      </tr>
+      <tr>
+        <td class="col-label">What it does</td>
+        <td>Gives agents a secure sandbox to run in</td>
+        <td>Gives agents structured domain knowledge to reason with</td>
+      </tr>
+      <tr>
+        <td class="col-label">Problem solved</td>
+        <td>"Agents need a safe place to operate"</td>
+        <td>"Agents need the right context to be useful"</td>
+      </tr>
+      <tr>
+        <td class="col-label">Without it</td>
+        <td>Agents leak data, go rogue, no guardrails</td>
+        <td>Agents hallucinate, guess, need 50 prompts to get it right</td>
+      </tr>
+      <tr>
+        <td class="col-label">Analogy</td>
+        <td style="color:#76b900;font-weight:600;">The kitchen</td>
+        <td style="color:#00d4ff;font-weight:600;">The recipe book</td>
+      </tr>
+      <tr>
+        <td class="col-label">Format</td>
+        <td>Runtime, sandbox, security policies</td>
+        <td>Portable .md files, model-agnostic, zero infrastructure</td>
+      </tr>
+      <tr>
+        <td class="col-label">Evidence</td>
+        <td>Enterprise security compliance</td>
+        <td>170x more reasoning paths vs vector RAG</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- SLIDE 5: The Full Stack -->
+  <div class="slide" data-num="06">
+    <h2>The <span class="accent">Complete Stack</span> — With Graphify</h2>
+    <p>When you combine both, this is what an enterprise AI deployment actually looks like:</p>
+
+    <div class="stack">
+      <div class="stack-layer" style="background:#00d4ff;"><span class="layer-label">One-Shot Output</span><span class="layer-desc">Agent gets it right the first time. No iteration needed.</span></div>
+      <div class="stack-arrow">^</div>
+      <div class="stack-layer" style="background:#00d4ff;"><span class="layer-label">Graphify.md</span><span class="layer-desc">Structured domain knowledge graph. 170x reasoning paths. Portable .md files.</span></div>
+      <div class="stack-arrow">^</div>
+      <div class="stack-layer" style="background:#76b900;"><span class="layer-label">NemoClaw</span><span class="layer-desc">Sandboxed runtime, privacy router, security guardrails</span></div>
+      <div class="stack-arrow">^</div>
+      <div class="stack-layer" style="background:#76b900;"><span class="layer-label">OpenClaw</span><span class="layer-desc">Open-source agent platform, local execution</span></div>
+      <div class="stack-arrow">^</div>
+      <div class="stack-layer stack-l1"><span class="layer-label">NVIDIA Hardware</span><span class="layer-desc">RTX / DGX / Nemotron models / Groq inference</span></div>
+    </div>
+
+    <div class="highlight">
+      <div class="label">Key Insight</div>
+      <p>Graphify .md files are already model-agnostic and portable. They drop directly into an OpenClaw agent's context window. No API. No infrastructure. Just structured knowledge that makes the agent actually work in your domain.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: The Quote -->
+  <div class="quote-box">
+    <div class="quote">"NVIDIA built the kitchen. Added guardrails so the chef can't burn the building down.<br><br>But <span>nobody gave the chef recipes</span>.<br><br>That's what we build."</div>
+  </div>
+
+  <!-- SLIDE 7: What This Means -->
+  <div class="slide" data-num="07">
+    <h2>What This Means <span class="accent">Right Now</span></h2>
+
+    <ul class="action-list">
+      <li>
+        <span class="num">1</span>
+        <div><strong>Every NemoClaw adopter will hit the "now what?" wall.</strong> They'll have secure agents with no domain expertise. That's our entry point. We're the pre-engagement layer that makes the agent useful on day one.</div>
+      </li>
+      <li>
+        <span class="num">2</span>
+        <div><strong>The market just validated our positioning.</strong> $72B flowing into inference infrastructure. NVIDIA, Adobe, Salesforce, SAP all building the runtime. Nobody building the knowledge layer. That's our moat.</div>
+      </li>
+      <li>
+        <span class="num">3</span>
+        <div><strong>"Context for Claws"</strong> — Graphify .md files as the knowledge layer that OpenClaw agents consume. Portable. Model-agnostic. Drops right in.</div>
+      </li>
+      <li>
+        <span class="num">4</span>
+        <div><strong>The 95% pilot failure wall</strong> — Companies will deploy NemoClaw, agents will fail because they lack domain context. Graphify solves this before the agent even starts.</div>
+      </li>
+      <li>
+        <span class="num">5</span>
+        <div><strong>41 knowledge systems across 27 verticals.</strong> Already built. Already proven. Ready to plug into the NemoClaw stack today.</div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- SLIDE 8: Numbers -->
+  <div class="slide" data-num="08">
+    <h2>By The <span class="accent">Numbers</span></h2>
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="stat-val">170x</div>
+        <div class="stat-label">More reasoning paths vs vector RAG</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val">41</div>
+        <div class="stat-label">Knowledge systems shipped</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val">27</div>
+        <div class="stat-label">Verticals covered</div>
+      </div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="stat-val">0</div>
+        <div class="stat-label">Infrastructure required</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val">30 min</div>
+        <div class="stat-label">Live demo — domain graph built</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val">$0</div>
+        <div class="stat-label">To try — we build it live</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Sources: <a href="https://nvidianews.nvidia.com/news/nvidia-announces-nemoclaw">NVIDIA Newsroom</a> · <a href="https://techcrunch.com/2026/03/16/nvidias-version-of-openclaw-could-solve-its-biggest-problem-security/">TechCrunch</a> · <a href="https://blogs.nvidia.com/blog/gtc-2026-news/">NVIDIA GTC 2026 Blog</a> · <a href="https://www.cnbc.com/2026/03/10/nvidia-open-source-ai-agent-platform-nemoclaw-wired-agentic-tools-openclaw-clawdbot-moltbot.html">CNBC</a><br><br>
+  Prepared by Dan Yarmoluk · <a href="https://www.graphifymd.com">graphifymd.com</a> · <a href="https://www.graphifymd.com/context-architecture.html">The Science</a>
+</div>
+
+</body>
+</html>
