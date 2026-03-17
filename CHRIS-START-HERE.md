@@ -1,85 +1,84 @@
-# Williams Trading System — Quick Start for Chris
+# Hey Chris — Here's Your Trading System
 
-## What This Is
+I built you a Larry Williams strategy engine. Everything below is from his **Forecast 2026 report** (128 pages) — I synthesized it into tools you can actually use.
 
-A complete Larry Williams trading methodology built into two interactive tools, synthesized from his **Forecast 2026** annual report (128 pages) and decades of his published strategy.
-
-**Live Links:**
-- **2026 Forecast + Stock Dashboard:** https://yarmoluk.github.io/williams-trading-system/williams-forecast-2026.html
-- **Live Indicator Dashboard:** https://yarmoluk.github.io/williams-trading-system/
+Three links. That's it.
 
 ---
 
-## The Two Tools
+## Link 1: The Forecast + Stock Dashboard
+**https://yarmoluk.github.io/williams-trading-system/williams-forecast-2026.html**
 
-### 1. Williams Forecast 2026 (`williams-forecast-2026.html`)
+This is the one you'll use most. When you open it:
 
-Toggle between two views:
+1. You'll see **METHODOLOGY** — 8 slides explaining WHY Williams thinks 2026 plays out the way it does (4-year cycle, presidential cycle, fundamentals). Scroll through once to get the logic.
+2. Click **DASHBOARD** at the top — this is your stock screener. 71 tickers with Williams' cycle confidence scores pulled straight from his report.
+3. **Sort by the Confidence column** (click the header). The higher the number, the stronger Williams' historical cycle pattern is for that stock.
+4. **Search for any ticker** you're watching in the search box.
 
-**METHODOLOGY** — 8 slides explaining Williams' logic:
-- 4-year cycle (60+ years out of sample, 2026 = buy year)
-- Decennial pattern (years ending in 6 rally Jul-Nov)
-- Presidential cycle (2nd year: March peak → summer low → massive rally)
-- Natural cycle (bullish from late April through August)
-- Fundamentals (no recession until mid-2027, rates declining, early inflation = bullish)
-- **The Playbook:** cautious Jan-Feb → accumulate Mar-Jun → ride Jul-Dec
-
-**DASHBOARD** — 71 tickers with:
-- Cycle confidence scores (from Williams' own charts)
-- Current phase as of today
-- Sweet spot timing (when the strongest wave starts)
-- Filter by category, search by ticker, sort any column
-- Color-coded: green 90%+, yellow 70-79%, orange <70%
-
-### 2. Live Trading Dashboard (`index.html`)
-
-Real-time simulation of Williams' indicator stack:
-
-| Layer | Indicator | What It Does |
-|-------|-----------|-------------|
-| L1 | COT Index | Directional bias from commercial positioning (smart money) |
-| L2 | Seasonal | Historical win rate for current month |
-| L3 | Williams A/D | Accumulation vs distribution (price-only, no volume) |
-| L4 | Williams %R | Entry trigger via failure swing method (not simple OB/OS) |
-| L4 | Ultimate Oscillator | Entry trigger via 3-timeframe divergence |
-| L5 | Pattern Detection | OOPS!, Smash Day, Inside Day, Outside Day, Volatility Breakout |
-| L6 | Position Sizing | Fixed fractional 2% risk per trade |
-
-The **Confluence Engine** scores 0-100 based on how many layers align. The hierarchy banner at top shows Williams' actual decision flow.
+### What the colors mean:
+- **Bright green (90%+)** = Williams' cycle has been right 9 out of 10 times historically
+- **Green (80-89%)** = strong pattern
+- **Yellow (70-79%)** = decent but less reliable
+- **Orange (<70%)** = weaker cycle, proceed with caution
 
 ---
 
-## Williams' 2026 Playbook (The Short Version)
+## Link 2: The Live Indicator Dashboard
+**https://yarmoluk.github.io/williams-trading-system/**
 
-```
-PHASE 1: Jan-Feb     → Market tops. Be cautious.
-PHASE 2: Mar-Jun     → Decline. BUY THE DIP. Target low: ~June 16.
-PHASE 3: Jul-Dec     → Major rally. Hold. "Powerhouse prices from May onwards."
-```
+This one shows you Williams' 6 indicators working together in real time. **Important: the price data is simulated** — it's a teaching tool showing how the indicators fire, not live market data.
 
-**We are in Phase 2 right now.** The cycle says the decline from mid-February has begun. This is the accumulation window.
+What you're looking at:
+- **Left sidebar** = 6 indicators, ranked by importance (COT at top = most important, position sizing at bottom)
+- **Right panel** = the Confluence Engine. This scores 0-100 based on how many indicators agree. **Green = trade it. Yellow = watch. Grey = sit on your hands.**
+- **Bottom right** = pattern detection. These are Williams' specific setups (OOPS!, Smash Day, etc.) that tell you WHEN to enter.
 
----
-
-## Key Williams Rules
-
-1. **Cycles tell you WHEN, not HOW FAR.** Use them for timing, not price targets.
-2. **Buy market breaks.** When cycles say "low coming," buy the dip — don't try to pick the exact bottom.
-3. **No single indicator is a system.** Layer COT + seasonal + A/D + trigger + pattern for high-probability entries.
-4. **Failure swings > simple overbought/oversold.** Don't just buy because %R hit -80. Wait for the failure swing confirmation.
-5. **2% max risk per trade.** Stop at the prior swing point. Position size = (Account × 0.02) / (Stop distance × point value).
-6. **Hold winners.** "You will never make big money until you learn to hold on to your winners."
-7. **Exit at UO > 70** (longs) or **UO < 30** (shorts), or when a new signal fires the other direction.
+The hierarchy banner across the top shows Williams' actual decision process: **COT bias → Seasonal confirm → A/D trend → Trigger → Pattern → Execute.**
 
 ---
 
-## Top Confidence Stocks (90%+)
+## Link 3: NVIDIA NemoClaw Briefing (Bonus)
+**https://yarmoluk.github.io/williams-trading-system/nvidia-nemoclaw-briefing.html**
 
-These had the highest cycle wave confidence in Williams' 2026 report:
+Separate topic — this is yesterday's GTC 2026 breakdown. Jensen Huang announced NemoClaw/OpenClaw (the future of AI agents). I mapped every assertion he made to what Graphify does. Slide 3 is the money slide.
+
+---
+
+## What Williams Says to Do RIGHT NOW
+
+We're in **Phase 2** of his 2026 playbook:
+
+| Phase | When | What To Do |
+|-------|------|-----------|
+| Phase 1 | Jan-Feb | Market tops. Be cautious. **This already happened.** |
+| **Phase 2** | **Mar-Jun** | **Decline. This is the buy window. Accumulate on dips.** |
+| Phase 3 | Jul-Dec | Major rally. Hold your positions. Ride it. |
+
+**Target low: around June 16th.** Williams says that's the best buy point of the year. Between now and then, you're looking for dips to buy — not trying to pick the exact bottom.
+
+---
+
+## Example: How to Use This on a Real Stock
+
+Let's say you like **Starbucks (SBUX)**:
+
+1. Open the Dashboard (Link 1) → search "SBUX"
+2. You'll see: **93% confidence** (bright green) — Williams' cycle has been right 93% of the time on this pattern
+3. The sweet spot timing tells you when the strongest historical wave starts
+4. **What this means:** Williams' data says SBUX has a very high probability of rallying from its cycle low into year-end
+5. **What to do:** Watch SBUX for a pullback between now and June. When it dips and the indicators on the Live Dashboard start turning green (oversold %R, accumulation on A/D), that's your entry zone
+6. **Position size:** Risk 2% of your account max. If you have $50K, that's $1,000 max loss on this trade. Set your stop at the recent swing low.
+
+---
+
+## The Top 9 Stocks (90%+ Confidence)
+
+These are Williams' highest-conviction cycle patterns for 2026:
 
 | Ticker | Name | Confidence |
 |--------|------|-----------|
-| DJIT | DJ Islamic Titans | 96% |
+| DJIT | DJ Islamic Titans Index | 96% |
 | SBUX | Starbucks | 93% |
 | BRK-B | Berkshire Hathaway | 90% |
 | COST | Costco | 90% |
@@ -91,24 +90,34 @@ These had the highest cycle wave confidence in Williams' 2026 report:
 
 ---
 
-## How to Use This Week
+## Williams' 7 Rules (Memorize These)
 
-1. **Open the Forecast Dashboard** → toggle to DASHBOARD → sort by Confidence (descending)
-2. **Filter to stocks you already trade** or are interested in
-3. **Check sweet spot timing** — if the strongest wave hasn't started yet, you're early (good)
-4. **Cross-reference with the Live Dashboard** → are the indicators confirming? Is %R oversold? Is A/D showing accumulation?
-5. **Size your position** using the 2% rule before entering
+1. **Cycles tell you WHEN, not HOW FAR.** Don't set price targets from cycles. Use them for timing.
+2. **Buy the dip.** When cycles say "low coming," start buying. Don't wait for the exact bottom — you'll miss it.
+3. **Stack your indicators.** No single indicator is enough. You want COT + seasonal + A/D + a trigger + a pattern all agreeing before you pull the trigger.
+4. **Wait for the failure swing.** Don't buy just because %R hit oversold. Wait for it to exit oversold, pull back, FAIL to re-enter oversold, then continue higher. That's the real signal.
+5. **2% max risk per trade.** Period. Stop loss at the prior swing low. Position size = (Account x 0.02) / (stop distance x point value).
+6. **Hold your winners.** "You will never make big money until you learn to hold on to your winners." — Larry Williams
+7. **Take profit when UO > 70** (if you're long) or **UO < 30** (if you're short).
 
 ---
 
-## What's Simulated vs Real
+## Quick FAQ
 
-- **Simulated:** The live indicator dashboard uses generated price data to demonstrate the indicators. It's a teaching tool, not live market data.
-- **Real from Williams:** All cycle confidence percentages, timing projections, phase descriptions, and stock selections come directly from his Forecast 2026 report.
-- **To connect to real data:** Would need to integrate a market data API (Alpha Vantage, Polygon, etc.) — a future build if you want it.
+**Is the live dashboard showing real prices?**
+No. It's simulated data demonstrating how Williams' indicators work together. Use it to learn the system, not to trade off directly.
+
+**Where do I get real data?**
+Your brokerage platform (ThinkorSwim, Fidelity, Interactive Brokers, etc.) will have Williams %R and most of these indicators built in. The dashboard shows you what to look for and how they combine.
+
+**Do I need to understand all 6 indicators?**
+No. Start with just the Confluence Score on the right panel. Green = go. Yellow = watch. Grey = wait. As you get comfortable, dig into the individual indicators.
+
+**What if I miss the June low?**
+Williams says buy market breaks — any significant pullback in Phase 2 or early Phase 3 is a buying opportunity. The rally from summer onward has happened 90% of the time historically.
 
 ---
 
 ## Disclaimer
 
-Based on Larry Williams' Forecast 2026 (Copyright 2025 LNL Publishing, LLC). Cycle projections are probabilistic, not guarantees. Past performance does not indicate future results. All trading decisions are your own. Use only risk capital.
+Based on Larry Williams' Forecast 2026 (Copyright 2025 LNL Publishing, LLC). Cycle projections are probabilistic, not guarantees. Past performance does not indicate future results. All trading decisions are yours. Use only risk capital you can afford to lose.
